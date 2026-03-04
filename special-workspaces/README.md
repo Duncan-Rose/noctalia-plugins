@@ -1,4 +1,4 @@
-# Special Workspaces
+# Special Workspaces (Hyprland)
 
 A simple widget that shows Hyprland special workspaces.
 
