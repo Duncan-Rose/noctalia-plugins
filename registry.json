@@ -150,6 +150,21 @@
       "lastUpdated": "2026-02-10T10:12:36-05:00"
     },
     {
+      "id": "custom-commands",
+      "name": "Custom Commands",
+      "version": "1.0.0",
+      "official": true,
+      "author": "Noctalia Team",
+      "description": "Define and run custom shell commands from the launcher",
+      "repository": "https://github.com/noctalia-dev/noctalia-plugins",
+      "minNoctaliaVersion": "4.4.1",
+      "license": "MIT",
+      "tags": [
+        "Launcher"
+      ],
+      "lastUpdated": "2026-03-09T00:54:12-04:00"
+    },
+    {
       "id": "dns-switcher",
       "name": "DNS Switcher",
       "version": "1.2.0",
