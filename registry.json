@@ -118,6 +118,20 @@
       "lastUpdated": "2026-02-23T20:48:07-05:00"
     },
     {
+      "id": "coin-flip",
+      "name": "Coin Flipper",
+      "version": "1.1.0",
+      "official": false,
+      "author": "DanisDeveloper",
+      "description": "Simple bar widget with notification about result",
+      "repository": "https://github.com/noctalia-dev/noctalia-plugins",
+      "license": "MIT",
+      "tags": [
+        "Bar"
+      ],
+      "lastUpdated": "2026-03-12T01:25:17+03:00"
+    },
+    {
       "id": "color-scheme-creator",
       "name": "Color Scheme Creator",
       "version": "1.0.1",
@@ -172,13 +186,13 @@
       "author": "Spyridon Siarapis",
       "description": "Custom stickers (images) that you can put on the desktop as desktop widgets.",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
-      "minNoctaliaVersion": "4.6.5",
+      "minNoctaliaVersion": "4.6.6",
       "license": "MIT",
       "tags": [
         "Desktop",
         "Fun"
       ],
-      "lastUpdated": "2026-03-07T20:50:36+01:00"
+      "lastUpdated": "2026-03-10T23:16:33+01:00"
     },
     {
       "id": "dns-switcher",
@@ -199,18 +213,18 @@
     {
       "id": "fancy-audiovisualizer",
       "name": "Fancy Audiovisualizer",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "official": true,
       "author": "Noctalia Team",
       "description": "Lemmy's fancy circular audio visualizer.",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
-      "minNoctaliaVersion": "4.6.5",
+      "minNoctaliaVersion": "4.6.6",
       "license": "MIT",
       "tags": [
         "Desktop",
         "Audio"
       ],
-      "lastUpdated": "2026-03-06T22:36:28-05:00"
+      "lastUpdated": "2026-03-10T23:09:38+01:00"
     },
     {
       "id": "file-search",
@@ -249,17 +263,17 @@
     {
       "id": "hello-world",
       "name": "Hello World",
-      "version": "1.1.1",
+      "version": "1.2.1",
       "official": true,
       "author": "Noctalia Team",
       "description": "A simple Hello World plugin demonstrating functionalities. For developers only.",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
-      "minNoctaliaVersion": "4.1.2",
+      "minNoctaliaVersion": "4.6.6",
       "license": "MIT",
       "tags": [
         "Development"
       ],
-      "lastUpdated": "2026-02-07T19:13:14+01:00"
+      "lastUpdated": "2026-03-10T21:42:50+01:00"
     },
     {
       "id": "hot-corners",

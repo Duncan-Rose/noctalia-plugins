@@ -7,23 +7,24 @@ ColumnLayout {
   id: root
 
   property var pluginApi: null
+  property var widgetSettings: null
   property var screen: null
 
   spacing: Style.marginM
 
   // Local state for editing
-  property real valueSensitivity: pluginApi?.pluginSettings?.sensitivity ?? 1.5
-  property real valueRotationSpeed: pluginApi?.pluginSettings?.rotationSpeed ?? 0.5
-  property real valueBarWidth: pluginApi?.pluginSettings?.barWidth ?? 0.6
-  property real valueRingOpacity: pluginApi?.pluginSettings?.ringOpacity ?? 0.8
-  property real valueBloomIntensity: pluginApi?.pluginSettings?.bloomIntensity ?? 0.5
-  property int valueVisualizationMode: pluginApi?.pluginSettings?.visualizationMode ?? 3
-  property real valueWaveThickness: pluginApi?.pluginSettings?.waveThickness ?? 1.0
-  property real valueInnerDiameter: pluginApi?.pluginSettings?.innerDiameter ?? 0.7
-  property bool valueFadeWhenIdle: pluginApi?.pluginSettings?.fadeWhenIdle ?? true
-  property bool valueUseCustomColors: pluginApi?.pluginSettings?.useCustomColors ?? false
-  property color valueCustomPrimaryColor: pluginApi?.pluginSettings?.customPrimaryColor ?? "#6750A4"
-  property color valueCustomSecondaryColor: pluginApi?.pluginSettings?.customSecondaryColor ?? "#625B71"
+  property real valueSensitivity: widgetSettings?.data?.sensitivity ?? pluginApi?.pluginSettings?.sensitivity ?? 1.5
+  property real valueRotationSpeed: widgetSettings?.data?.rotationSpeed ?? pluginApi?.pluginSettings?.rotationSpeed ?? 0.5
+  property real valueBarWidth: widgetSettings?.data?.barWidth ?? pluginApi?.pluginSettings?.barWidth ?? 0.6
+  property real valueRingOpacity: widgetSettings?.data?.ringOpacity ?? pluginApi?.pluginSettings?.ringOpacity ?? 0.8
+  property real valueBloomIntensity: widgetSettings?.data?.bloomIntensity ?? pluginApi?.pluginSettings?.bloomIntensity ?? 0.5
+  property int valueVisualizationMode: widgetSettings?.data?.visualizationMode ?? pluginApi?.pluginSettings?.visualizationMode ?? 3
+  property real valueWaveThickness: widgetSettings?.data?.waveThickness ?? pluginApi?.pluginSettings?.waveThickness ?? 1.0
+  property real valueInnerDiameter: widgetSettings?.data?.innerDiameter ?? pluginApi?.pluginSettings?.innerDiameter ?? 0.7
+  property bool valueFadeWhenIdle: widgetSettings?.data?.fadeWhenIdle ?? pluginApi?.pluginSettings?.fadeWhenIdle ?? true
+  property bool valueUseCustomColors: widgetSettings?.data?.useCustomColors ?? pluginApi?.pluginSettings?.useCustomColors ?? false
+  property color valueCustomPrimaryColor: widgetSettings?.data?.customPrimaryColor ?? pluginApi?.pluginSettings?.customPrimaryColor ?? "#6750A4"
+  property color valueCustomSecondaryColor: widgetSettings?.data?.customSecondaryColor ?? pluginApi?.pluginSettings?.customSecondaryColor ?? "#625B71"
 
   // Mode helpers
   readonly property bool modeHasBars: valueVisualizationMode === 0 || valueVisualizationMode === 3 || valueVisualizationMode === 5
@@ -49,7 +50,10 @@ ColumnLayout {
       {"key": "5", "name": pluginApi?.tr("settings.mode.all") ?? "All"}
     ]
     currentKey: String(root.valueVisualizationMode)
-    onSelected: key => root.valueVisualizationMode = parseInt(key)
+    onSelected: key => {
+      root.valueVisualizationMode = parseInt(key);
+      root.saveSettings();
+    }
   }
 
   // Wave thickness slider (shown when mode includes wave)
@@ -61,7 +65,10 @@ ColumnLayout {
     from: 0.3
     to: 2.0
     stepSize: 0.1
-    onMoved: value => root.valueWaveThickness = value
+    onMoved: value => {
+      root.valueWaveThickness = value;
+      root.saveSettings();
+    }
   }
 
   // Sensitivity slider
@@ -72,7 +79,10 @@ ColumnLayout {
     from: 0.5
     to: 3.0
     stepSize: 0.1
-    onMoved: value => root.valueSensitivity = value
+    onMoved: value => {
+      root.valueSensitivity = value;
+      root.saveSettings();
+    }
   }
 
   // Rotation speed slider
@@ -83,7 +93,10 @@ ColumnLayout {
     from: 0.0
     to: 2.0
     stepSize: 0.1
-    onMoved: value => root.valueRotationSpeed = value
+    onMoved: value => {
+      root.valueRotationSpeed = value;
+      root.saveSettings();
+    }
   }
 
   // Bar width slider (shown when mode includes bars)
@@ -95,7 +108,10 @@ ColumnLayout {
     from: 0.2
     to: 1.0
     stepSize: 0.1
-    onMoved: value => root.valueBarWidth = value
+    onMoved: value => {
+      root.valueBarWidth = value;
+      root.saveSettings();
+    }
   }
 
   // Ring opacity slider (shown when mode includes rings)
@@ -107,7 +123,10 @@ ColumnLayout {
     from: 0.0
     to: 1.0
     stepSize: 0.1
-    onMoved: value => root.valueRingOpacity = value
+    onMoved: value => {
+      root.valueRingOpacity = value;
+      root.saveSettings();
+    }
   }
 
   // Base diameter slider
@@ -118,7 +137,10 @@ ColumnLayout {
     from: 0
     to: 1
     stepSize: 0.05
-    onMoved: value => root.valueInnerDiameter = value
+    onMoved: value => {
+      root.valueInnerDiameter = value;
+      root.saveSettings();
+    }
   }
 
   // Bloom intensity slider
@@ -129,7 +151,10 @@ ColumnLayout {
     from: 0.0
     to: 1.0
     stepSize: 0.05
-    onMoved: value => root.valueBloomIntensity = value
+    onMoved: value => {
+      root.valueBloomIntensity = value;
+      root.saveSettings();
+    }
   }
 
   // Fade when idle toggle
@@ -137,7 +162,10 @@ ColumnLayout {
     label: pluginApi?.tr("settings.fadeWhenIdle") ?? "Fade When Idle"
     description: pluginApi?.tr("settings.fadeWhenIdle-description") ?? "Fade out visualizer when no audio is playing"
     checked: root.valueFadeWhenIdle
-    onToggled: checked => root.valueFadeWhenIdle = checked
+    onToggled: checked => {
+      root.valueFadeWhenIdle = checked;
+      root.saveSettings();
+    }
   }
 
   // Use custom colors toggle
@@ -145,7 +173,10 @@ ColumnLayout {
     label: pluginApi?.tr("settings.useCustomColors") ?? "Use Custom Colors"
     description: pluginApi?.tr("settings.useCustomColors-description") ?? "Override theme colors with custom colors"
     checked: root.valueUseCustomColors
-    onToggled: checked => root.valueUseCustomColors = checked
+    onToggled: checked => {
+      root.valueUseCustomColors = checked;
+      root.saveSettings();
+    }
   }
 
   // Custom primary color picker
@@ -162,7 +193,10 @@ ColumnLayout {
     NColorPicker {
       screen: Screen
       selectedColor: root.valueCustomPrimaryColor
-      onColorSelected: color => root.valueCustomPrimaryColor = color
+      onColorSelected: color => {
+        root.valueCustomPrimaryColor = color;
+        root.saveSettings();
+      }
     }
   }
 
@@ -180,28 +214,31 @@ ColumnLayout {
     NColorPicker {
       screen: Screen
       selectedColor: root.valueCustomSecondaryColor
-      onColorSelected: color => root.valueCustomSecondaryColor = color
+      onColorSelected: color => {
+        root.valueCustomSecondaryColor = color;
+        root.saveSettings();
+      }
     }
   }
 
   // Called when user clicks Apply/Save
   function saveSettings() {
-    if (!pluginApi)
+    if (!widgetSettings)
       return;
 
-    pluginApi.pluginSettings.sensitivity = root.valueSensitivity;
-    pluginApi.pluginSettings.rotationSpeed = root.valueRotationSpeed;
-    pluginApi.pluginSettings.barWidth = root.valueBarWidth;
-    pluginApi.pluginSettings.ringOpacity = root.valueRingOpacity;
-    pluginApi.pluginSettings.bloomIntensity = root.valueBloomIntensity;
-    pluginApi.pluginSettings.visualizationMode = root.valueVisualizationMode;
-    pluginApi.pluginSettings.waveThickness = root.valueWaveThickness;
-    pluginApi.pluginSettings.innerDiameter = root.valueInnerDiameter;
-    pluginApi.pluginSettings.fadeWhenIdle = root.valueFadeWhenIdle;
-    pluginApi.pluginSettings.useCustomColors = root.valueUseCustomColors;
-    pluginApi.pluginSettings.customPrimaryColor = root.valueCustomPrimaryColor.toString();
-    pluginApi.pluginSettings.customSecondaryColor = root.valueCustomSecondaryColor.toString();
+    widgetSettings.data.sensitivity = root.valueSensitivity;
+    widgetSettings.data.rotationSpeed = root.valueRotationSpeed;
+    widgetSettings.data.barWidth = root.valueBarWidth;
+    widgetSettings.data.ringOpacity = root.valueRingOpacity;
+    widgetSettings.data.bloomIntensity = root.valueBloomIntensity;
+    widgetSettings.data.visualizationMode = root.valueVisualizationMode;
+    widgetSettings.data.waveThickness = root.valueWaveThickness;
+    widgetSettings.data.innerDiameter = root.valueInnerDiameter;
+    widgetSettings.data.fadeWhenIdle = root.valueFadeWhenIdle;
+    widgetSettings.data.useCustomColors = root.valueUseCustomColors;
+    widgetSettings.data.customPrimaryColor = root.valueCustomPrimaryColor.toString();
+    widgetSettings.data.customSecondaryColor = root.valueCustomSecondaryColor.toString();
 
-    pluginApi.saveSettings();
+    widgetSettings.save();
   }
 }
