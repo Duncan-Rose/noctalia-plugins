@@ -195,6 +195,21 @@
       "lastUpdated": "2026-03-10T23:16:33+01:00"
     },
     {
+      "id": "deskvis",
+      "name": "DeskVis",
+      "version": "2.0.0",
+      "official": false,
+      "author": "HAVEKziad",
+      "description": "Audio visualizer desktop widget — bars, wave, or mirror. Supports all directions. Transparent, follows color scheme.",
+      "minNoctaliaVersion": "4.6.6",
+      "license": "MIT",
+      "tags": [
+        "Desktop",
+        "Audio"
+      ],
+      "lastUpdated": "2026-03-12T14:35:45Z"
+    },
+    {
       "id": "dns-switcher",
       "name": "DNS Switcher",
       "version": "1.2.0",
