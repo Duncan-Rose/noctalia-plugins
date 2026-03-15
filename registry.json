@@ -1040,7 +1040,7 @@
     {
       "id": "vscode-provider",
       "name": "VS Code Provider",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "official": false,
       "author": "Krendil",
       "description": "Open VS Code Folders and Workspaces",
@@ -1051,7 +1051,7 @@
         "Launcher",
         "Development"
       ],
-      "lastUpdated": "2026-03-05T13:12:10+10:00"
+      "lastUpdated": "2026-03-15T17:16:29+01:00"
     },
     {
       "id": "weather-indicator",
