@@ -1,11 +1,13 @@
+
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
 import qs.Widgets
+import qs.Services.UI
 import qs.Services.System
 
-Item {
+NIconButton {
     id: root
 
     property var pluginApi: null
@@ -29,7 +31,7 @@ Item {
     property color colorSilent: root.useCustomColors && cfg.colorSilent || Color.mSurfaceVariant
     property color colorTx: root.useCustomColors && cfg.colorTx || Color.mSecondary
     property color colorRx: root.useCustomColors && cfg.colorRx || Color.mPrimary
-    property color colorText: root.useCustomColors && cfg.colorText || Qt.alpha(Color.mOnSurfaceVariant, 0.3)
+    property color colorText: root.useCustomColors && cfg.colorText || Color.mOnSurfaceVariant
 
     property int byteThresholdActive: cfg.byteThresholdActive || defaults.byteThresholdActive || 1024
     property real fontSizeModifier: cfg.fontSizeModifier || defaults.fontSizeModifier || 1
@@ -43,6 +45,10 @@ Item {
 
     readonly property real contentWidth: barIsVertical ? Style.capsuleHeight : Math.max(contentRow.implicitWidth, minWidth)
     readonly property real contentHeight: barIsVertical ? Math.round(contentRow.implicitHeight + Style.marginM * 2) : Style.capsuleHeight
+
+    baseSize: -1.0
+    tooltipText: mainInstance?.buildTooltip()
+    tooltipDirection: BarService.getTooltipDirection()
 
     implicitWidth: contentWidth
     implicitHeight: contentHeight
@@ -103,6 +109,39 @@ Item {
                     color: root.rxSpeed > root.byteThresholdActive ? root.colorRx : root.colorSilent
                     pointSize: Style.fontSizeL * root.iconSizeModifier
                 }
+            }
+        }
+    }
+
+    onRightClicked: {
+        var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
+        if (popupMenuWindow) {
+            popupMenuWindow.showContextMenu(contextMenu);
+            contextMenu.openAtItem(root, screen);
+        }
+    }
+
+    // ---------- Interaction ----------
+
+    NPopupContextMenu {
+        id: contextMenu
+
+        model: [
+            {
+                "label": I18n.tr("actions.widget-settings"),
+                "action": "widget-settings",
+                "icon": "settings"
+            },
+        ]
+
+        onTriggered: action => {
+            var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
+            if (popupMenuWindow) {
+                popupMenuWindow.close();
+            }
+
+            if (action === "widget-settings") {
+                BarService.openPluginSettings(screen, pluginApi.manifest);
             }
         }
     }
