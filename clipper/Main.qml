@@ -491,6 +491,13 @@ Item {
     const safePattern = /^notecard_\d{6}-\d{6}\.txt$/;
     for (let i = 0; i < root.noteCards.length; i++) {
       const note = root.noteCards[i];
+
+      // Delete the .json notecard file from notecards directory
+      const filename = getNoteFilename(note);
+      const filePath = root.noteCardsDir + "/" + filename;
+      Quickshell.execDetached(["rm", "-f", filePath]);
+
+      // Delete any exported .txt files
       const exportedFiles = note.exportedFiles || [];
       for (let j = 0; j < exportedFiles.length; j++) {
         if (safePattern.test(exportedFiles[j])) {
