@@ -3,7 +3,9 @@
 A `lively` wallpaper selector for images and videos with live preview.
 
 > [!IMPORTANT]
-> This plugin is in an early state. Since it hasn't been tested extensively, there are probably some rough edges. More features are coming — if you find bugs or have ideas, let me know on GitHub.
+> This plugin is in an early state. Since it hasn't been tested extensively,
+there are probably some rough edges. More features are coming — if you find
+bugs or have ideas, let me know on GitHub.
 
 https://github.com/user-attachments/assets/9ffbc83d-95e5-4dcd-a834-7bd224211b55
 
@@ -17,10 +19,10 @@ https://github.com/user-attachments/assets/9ffbc83d-95e5-4dcd-a834-7bd224211b55
 
 ## Future Work
 
-- Plugin settings panel
 - Video wallpaper support
 - Card sorting based on colors
-- Bar widget
+- Plugin settings panel
+- Better Bar widget
 - More customizability
 
 ## Dependencies
@@ -67,7 +69,8 @@ Scroll wheel also works for navigation.
 
 ## Configuration
 
-Settings are currently only defined in `manifest.json` in the plugin directory `~/.config/noctalia/plugins/wallcards`. A settings panel is coming soon.
+Settings are currently only defined in `manifest.json` in the plugin directory
+`~/.config/noctalia/plugins/wallcards`. A settings panel is coming soon.
 
 | Setting | Description |
 | --- | --- |

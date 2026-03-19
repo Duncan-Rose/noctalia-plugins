@@ -10,7 +10,8 @@
   "description": "A `lively` wallpaper selector.",
   "tags": ["Hyprland", "Desktop", "Theming"],
   "entryPoints": {
-    "main": "Main.qml"
+    "main": "Main.qml",
+    "barWidget": "BarWidget.qml"
   },
   "dependencies": {
     "plugins": []

@@ -52,8 +52,8 @@ PanelWindow {
   property var topBarRadius: cfg.top_bar_radius || defaults.top_bar_radius
   property string wallpaperDir: Settings.data.wallpaper.directory
 
-  property bool loading: true
   property string loadingMessage
+  property bool loading: true
   property int pendingProcesses: 0
   property int thumbnailRevision: 0
   property var filteredItems: []
