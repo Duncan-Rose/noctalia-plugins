@@ -118,9 +118,10 @@ Item {
     };
 
     if (foundIndex >= 0) {
-      notes.splice(foundIndex, 1);
+      notes[foundIndex] = note;
+    } else {
+      notes.unshift(note);
     }
-    notes.unshift(note);
 
     persistNotes(notes);
 

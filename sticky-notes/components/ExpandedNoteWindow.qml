@@ -81,7 +81,7 @@ Item {
 
           NIcon {
             anchors.centerIn: parent
-            icon: root.editing ? "eye" : "pencil"
+            icon: root.editing ? "check" : "pencil"
             pointSize: Style.fontSizeM
             color: "#37474F"
           }
