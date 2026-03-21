@@ -669,7 +669,7 @@
     {
       "id": "niri-auto-tile",
       "name": "Niri Auto-Tile",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "official": false,
       "author": "pir0c0pter0",
       "description": "Automatically redistributes niri column widths evenly when windows open or close",
@@ -682,7 +682,7 @@
         "System",
         "Niri"
       ],
-      "lastUpdated": "2026-03-04T12:34:01-05:00"
+      "lastUpdated": "2026-03-21T20:51:43+01:00"
     },
     {
       "id": "niri-overview-launcher",
