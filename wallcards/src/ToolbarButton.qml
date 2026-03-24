@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Commons
+import qs.Widgets
 
 Rectangle {
   id: root
@@ -28,22 +29,20 @@ Rectangle {
     anchors.centerIn: parent
     spacing: Style.marginXS
 
-    Text {
+    NIcon {
       visible: !root.hasCustomContent && root.icon !== ""
       anchors.verticalCenter: parent.verticalCenter
-      text: root.icon
+      icon: root.icon
       color: root.accentColor
-      font.family: "Material Symbols Outlined"
-      font.pixelSize: Style.fontSizeS
+      font.pointSize: Style.fontSizeS
     }
 
-    Text {
+    NText {
       visible: !root.hasCustomContent && root.label !== ""
       anchors.verticalCenter: parent.verticalCenter
       text: root.label
       color: root.accentColor
-      font.family: Settings.data.ui.fontDefault
-      font.pixelSize: Style.fontSizeS
+      font.pointSize: Style.fontSizeS
     }
 
     Loader {
@@ -61,12 +60,11 @@ Rectangle {
       anchors.verticalCenter: parent.verticalCenter
       color: Qt.alpha(root.accentColor, root.active ? 0.2 : 0.06)
 
-      Text {
+      NText {
         anchors.centerIn: parent
         text: root.hotkey
         color: Qt.alpha(root.accentColor, root.active ? Style.opacityFull : Style.opacityHeavy)
-        font.family: Settings.data.ui.fontDefault
-        font.pixelSize: Style.fontSizeXXS
+        font.pointSize: Style.fontSizeXXS
         font.bold: true
       }
     }

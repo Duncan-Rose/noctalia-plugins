@@ -8,7 +8,7 @@
   "license": "MIT",
   "repository": "https://github.com/noctalia-dev/noctalia-plugins",
   "description": "A `lively` wallpaper selector.",
-  "tags": ["Hyprland", "Desktop", "Theming"],
+  "tags": ["Desktop", "Theming"],
   "entryPoints": {
     "main": "Main.qml",
     "barWidget": "BarWidget.qml"

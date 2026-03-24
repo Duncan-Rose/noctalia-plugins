@@ -1,5 +1,6 @@
-import qs.Commons
 import QtQuick
+import qs.Commons
+import qs.Widgets
 
 Rectangle {
   id: root
@@ -10,7 +11,7 @@ Rectangle {
   property color textColor: Color.mOnSurface
   property color iconColor: Color.mPrimary
   property color backgroundColor: Color.mSurface
-  property real fontSize: Style.fontSizeS
+  property real fontSize: Style.fontSizeXS
 
   width: badgeRow.implicitWidth + Style.margin2S
   height: badgeRow.implicitHeight + Style.margin2XS
@@ -24,22 +25,19 @@ Rectangle {
     anchors.centerIn: parent
     spacing: Style.marginS
 
-    Text {
+    NIcon {
       visible: root.icon
       anchors.verticalCenter: parent.verticalCenter
-      text: root.icon
+      icon: root.icon
       color: root.iconColor
-      font.family: "Material Symbols Outlined"
-      font.pixelSize: root.fontSize
+      font.pointSize: root.fontSize
     }
 
-    Text {
-      visible: root.text
+    NText {
       anchors.verticalCenter: parent.verticalCenter
       text: root.text
       color: root.textColor
-      font.family: Settings.data.ui.fontDefault
-      font.pixelSize: root.fontSize
+      font.pointSize: root.fontSize
       font.bold: root.boldText
       font.letterSpacing: 0.5
     }

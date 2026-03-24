@@ -12,9 +12,10 @@ NIconButton {
   property string widgetId: ""
   property string section: ""
 
-  readonly property var mainInstance: pluginApi?.mainInstance
+  property var cfg: pluginApi?.pluginSettings || ({})
+  property var defaults: pluginApi?.manifest?.metadata?.defaultSettings || ({})
 
-  readonly property string iconColorKey: cfg.iconColor ?? defaults.iconColor
+  readonly property string iconColorKey: cfg.iconColor ?? defaults.iconColor ?? "none"
 
   icon: "cards"
   tooltipText: pluginApi?.tr("widget.tooltip")
@@ -30,7 +31,7 @@ NIconButton {
 
   onClicked: {
     if (pluginApi) {
-      root.mainInstance.openWindow();
+      root.pluginApi?.mainInstance.toggle();
     }
   }
 }

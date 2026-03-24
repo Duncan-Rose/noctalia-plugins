@@ -1,6 +1,7 @@
 import "src"
 
 import qs.Commons
+import qs.Widgets
 import qs.Services.UI
 
 import QtQuick
@@ -139,11 +140,10 @@ PanelWindow {
     var fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
 
     if (utils.isVideo(fileName))
-      console.log("Not implemented yet. Maybye use video wallpaper plugin?");
+      Logger.i("Wallcards", "Not implemented yet.");
     else {
       var screen = Settings.data.wallpaper.setWallpaperOnAllMonitors ? undefined : targetScreen.name;
       WallpaperService.changeWallpaper(filePath, screen);
-      WallpaperService.applyFavoriteTheme(path, screen);
     }
   }
 
@@ -190,6 +190,11 @@ PanelWindow {
         duration: root.animationDuration
         easing.type: Easing.OutCubic
       }
+    }
+
+    MouseArea {
+      anchors.fill: parent
+      onClicked: root.pluginApi?.mainInstance.hide()
     }
   }
 
@@ -258,12 +263,11 @@ PanelWindow {
         }
       }
 
-      Text {
+      NText {
         anchors.verticalCenter: parent.verticalCenter
         text: root.loadingMessage
         color: Color.mOnSurface
-        font.family: Settings.data.ui.fontDefault
-        font.pixelSize: Style.fontSizeXL
+        font.pointSize: Style.fontSizeXL
       }
     }
   }
@@ -312,19 +316,17 @@ PanelWindow {
       x: leftEdge + entryOffset
       width: rightEdge - leftEdge
       height: topBarHeight
-      radius: topBarRadius || Style.radiusS
+      radius: topBarRadius ?? Style.radiusS
 
       // Left
-      Text {
+      NText {
         anchors.left: parent.left
         anchors.leftMargin: Style.marginL
         anchors.verticalCenter: parent.verticalCenter
         text: `${cardStack.currentIndex + 1} / ${root.filteredCount}`
         color: Color.mPrimary
         font {
-          family: Settings.data.ui.fontDefault
-          pixelSize: Style.fontSizeL
-          letterSpacing: 0.5
+          pointSize: Style.fontSizeM
         }
       }
 
@@ -338,19 +340,19 @@ PanelWindow {
             {
               key: "all",
               label: "All",
-              icon: "\ue5c3",
+              icon: "wallpaper",
               hotkey: "A"
             },
             {
               key: "images",
               label: "Images",
-              icon: "\ue3f4",
+              icon: "image",
               hotkey: "I"
             },
             {
               key: "videos",
               label: "Videos",
-              icon: "\ue04b",
+              icon: "video",
               hotkey: "V"
             }
           ]
@@ -374,7 +376,7 @@ PanelWindow {
         spacing: Style.marginXS
 
         ToolbarButton {
-          icon: "\ue043"
+          icon: "arrows-random"
           label: "Shuffle"
           hotkey: "R"
           onClicked: cardStack.randomJump()
@@ -393,14 +395,10 @@ PanelWindow {
               PulsingDot {
                 pulsing: root.livePreview
               }
-              Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "Live"
+              NText {
+                text: pluginApi?.tr("buttons.live-preview")
                 color: liveBtn.accentColor
-                font {
-                  family: Settings.data.ui.fontDefault
-                  pixelSize: Style.fontSizeS
-                }
+                font.pointSize: Style.fontSizeS
               }
             }
           }
@@ -431,7 +429,7 @@ PanelWindow {
       livePreview: root.livePreview
 
       onApplyRequested: (filePath) => root.applyCard(filePath)
-      onQuitRequested: root.destroy()
+      onQuitRequested: root.pluginApi?.mainInstance.hide();
       onFilterChanged: filter => root.selectedFilter = filter
       onLivePreviewToggled: root.livePreview = !root.livePreview
 
@@ -686,7 +684,7 @@ PanelWindow {
             anchors.topMargin: Style.marginM
             anchors.rightMargin: Style.marginM
             visible: cardDelegate.currentFileName !== ""
-            icon: cardDelegate.isVideoFile ? "videocam" : "insert_drive_file"
+            icon: cardDelegate.isVideoFile ? "video" : "image"
             text: cardDelegate.currentFileName.split('.').pop().toUpperCase()
           }
 
@@ -705,7 +703,7 @@ PanelWindow {
             anchors.topMargin: Style.marginM
             textColor: Color.mError
             visible: isCenter && cardDelegate.isVideoFile
-            icon: "stop_circle"
+            icon: "info-circle"
             text: "Video wallpaper are comming soon."
           }
 
