@@ -1,4 +1,4 @@
-name: Auto-assign Plugin Reviewers
+name: Automatic Code Quality Review
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
