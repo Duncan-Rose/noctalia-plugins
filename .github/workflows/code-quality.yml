@@ -34,8 +34,8 @@ jobs:
           issues=0
           line_index=0
 
-          l_priority='[(L)]("Low priority, it is okay for this to remain unfixed before merging")'
-          h_priority='[(H)]("High priority, this needs to be fixed for the PR to be merged")'
+          l_priority="[(L)]($PR_NUMBER 'Low priority, it is okay for this to remain unfixed before merging')"
+          h_priority="[(H)]($PR_NUMBER 'High priority, this needs to be fixed for the PR to be merged')"
 
           # Helper function to reduce repetitive code
           # - First argument ($1): Priority string.
