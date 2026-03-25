@@ -9,7 +9,7 @@
 
 import { execSync } from 'child_process'
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'fs'
-import { join } from 'path'
+import { join, __dirname } from 'path'
 
 const REGISTRY_VERSION = 1;
 const ROOT_DIR = join(__dirname, '..', '..');
