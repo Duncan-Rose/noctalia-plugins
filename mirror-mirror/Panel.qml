@@ -124,14 +124,14 @@ Item {
 
         if (backend === "none") {
           root.monitorModel = [];
-          root.discoveryError = pluginApi?.tr("panel.discoveryError.noBackendFound") || "No monitor backend found. Install/use one of: wlr-randr, hyprctl, swaymsg, or niri.";
+          root.discoveryError = pluginApi?.tr("panel.discoveryError.noBackendFound");
           return;
         }
 
         const jsonText = jsonLines.join("\n").trim();
         if (jsonText.length === 0) {
           root.monitorModel = [];
-          root.discoveryError = pluginApi?.tr("panel.discoveryError.noDataFromBackend", { backend: backend }) || ("No monitor data returned from backend: " + backend);
+          root.discoveryError = pluginApi?.tr("panel.discoveryError.noDataFromBackend", { backend: backend });
           return;
         }
 
@@ -141,7 +141,7 @@ Item {
           names = extractNames(parsed);
         } catch (e) {
           root.monitorModel = [];
-          root.discoveryError = pluginApi?.tr("panel.discoveryError.parseFailed", { backend: backend }) || ("Failed to parse monitor list from " + backend + ".");
+          root.discoveryError = pluginApi?.tr("panel.discoveryError.parseFailed", { backend: backend });
           return;
         }
 
@@ -157,7 +157,7 @@ Item {
         }
 
         if (unique.length === 0) {
-          root.discoveryError = pluginApi?.tr("panel.discoveryError.noMonitorsDetected", { backend: backend }) || ("No monitors detected from backend: " + backend);
+          root.discoveryError = pluginApi?.tr("panel.discoveryError.noMonitorsDetected", { backend: backend });
         }
 
         root.monitorModel = unique.map(name => ({
@@ -209,9 +209,10 @@ Item {
       }
       spacing: Style.marginM
 
+
       NText {
         Layout.fillWidth: true
-        text: pluginApi?.tr("panel.title") || "Mirror Mirror"
+        text: pluginApi?.tr("panel.title")
         pointSize: Style.fontSizeL
         font.weight: Font.DemiBold
         color: Color.mOnSurface
@@ -219,7 +220,7 @@ Item {
 
       NText {
         Layout.fillWidth: true
-        text: pluginApi?.tr("panel.subtitle") || "Mirror one monitor to another using wl-mirror."
+        text: pluginApi?.tr("panel.subtitle")
         pointSize: Style.fontSizeS
         color: Color.mOnSurfaceVariant
         wrapMode: Text.WordWrap
@@ -227,8 +228,8 @@ Item {
 
       NComboBox {
         Layout.fillWidth: true
-        label: pluginApi?.tr("panel.source.label") || "Source monitor"
-        description: pluginApi?.tr("panel.source.description") || "Monitor to mirror from"
+        label: pluginApi?.tr("panel.source.label")
+        description: pluginApi?.tr("panel.source.description")
         model: root.sourceModel
         currentKey: root.selectedSource
         enabled: !(mainInstance?.mirroringActive ?? false) && !root.controlsLocked
@@ -237,8 +238,8 @@ Item {
 
       NComboBox {
         Layout.fillWidth: true
-        label: pluginApi?.tr("panel.destination.label") || "Destination monitor"
-        description: pluginApi?.tr("panel.destination.description") || "Monitor to mirror to (scaled fullscreen)"
+        label: pluginApi?.tr("panel.destination.label")
+        description: pluginApi?.tr("panel.destination.description")
         model: root.destinationModel
         currentKey: root.selectedDestination
         enabled: !(mainInstance?.mirroringActive ?? false) && !root.controlsLocked
@@ -248,7 +249,7 @@ Item {
       NText {
         Layout.fillWidth: true
         visible: root.sameSelection
-        text: pluginApi?.tr("panel.validation.sameSelection") || "Source and destination must be different monitors."
+        text: pluginApi?.tr("panel.validation.sameSelection")
         pointSize: Style.fontSizeS
         color: Color.mError
       }
@@ -256,7 +257,7 @@ Item {
       NText {
         Layout.fillWidth: true
         visible: !root.hasEnoughMonitors
-        text: pluginApi?.tr("panel.validation.needTwoMonitors") || "Need at least 2 monitors detected to mirror."
+        text: pluginApi?.tr("panel.validation.needTwoMonitors")
         pointSize: Style.fontSizeS
         color: Color.mError
       }
@@ -283,9 +284,10 @@ Item {
         Layout.fillWidth: true
         spacing: Style.marginS
 
+
         NButton {
           Layout.fillWidth: true
-          text: pluginApi?.tr("panel.actions.refresh") || "Refresh outputs"
+          text: pluginApi?.tr("panel.actions.refresh")
           icon: "refresh"
           enabled: !(mainInstance?.mirroringActive ?? false)
           onClicked: root.refreshOutputs()
@@ -293,15 +295,15 @@ Item {
 
         NButton {
           Layout.fillWidth: true
-          text: pluginApi?.tr("panel.actions.start") || "Start mirror"
+          text: pluginApi?.tr("panel.actions.start")
           icon: "media-play"
           backgroundColor: Color.mPrimary
           textColor: Color.mOnPrimary
           enabled: !(mainInstance?.mirroringActive ?? false)
-            && !root.controlsLocked
-            && root.selectedSource !== ""
-            && root.selectedDestination !== ""
-            && !root.sameSelection
+              && !root.controlsLocked
+              && root.selectedSource !== ""
+              && root.selectedDestination !== ""
+              && !root.sameSelection
           onClicked: root.startMirror()
         }
       }
@@ -309,7 +311,7 @@ Item {
       NButton {
         Layout.fillWidth: true
         visible: mainInstance?.mirroringActive ?? false
-        text: pluginApi?.tr("panel.actions.stop") || "Stop mirror"
+        text: pluginApi?.tr("panel.actions.stop")
         icon: "stop"
         backgroundColor: Color.mError
         textColor: Color.mOnError

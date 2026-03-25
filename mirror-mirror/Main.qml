@@ -35,17 +35,17 @@ Item {
 
   function startMirror(source, destination) {
     if (mirrorProcess.running) {
-      root.lastError = root.pluginApi?.tr("main.error.alreadyMirroring") || "A mirror session is already active. Stop it before starting another.";
+      root.lastError = root.pluginApi?.tr("main.error.alreadyMirroring");
       return;
     }
 
     if (!source || !destination) {
-      root.lastError = root.pluginApi?.tr("main.error.selectBothMonitors") || "Please select both source and destination monitors.";
+      root.lastError = root.pluginApi?.tr("main.error.selectBothMonitors");
       return;
     }
 
     if (source === destination) {
-      root.lastError = root.pluginApi?.tr("main.error.sameMonitor") || "Source and destination must be different monitors.";
+      root.lastError = root.pluginApi?.tr("main.error.sameMonitor");
       return;
     }
 
@@ -84,7 +84,7 @@ Item {
       }
 
       if (exitCode !== 0 && exitStatus !== Process.NormalExit) {
-        root.lastError = root.pluginApi?.tr("main.error.unexpectedExit") || "wl-mirror exited unexpectedly.";
+        root.lastError = root.pluginApi?.tr("main.error.unexpectedExit");
       }
     }
 
@@ -117,7 +117,7 @@ Item {
         if (msg.length > 0) {
           root.lastError = msg;
         } else if (sawBackendAttemptFailure) {
-          root.lastError = root.pluginApi?.tr("main.error.noCompatibleBackend") || "wl-mirror could not start: no compatible backend worked.";
+          root.lastError = root.pluginApi?.tr("main.error.noCompatibleBackend");
         }
       }
     }

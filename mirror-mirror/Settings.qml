@@ -12,7 +12,7 @@ ColumnLayout {
 
   NText {
     Layout.fillWidth: true
-    text: pluginApi?.tr("settings.description") || "Mirror Mirror uses wl-mirror to mirror a source monitor to a destination monitor."
+    text: pluginApi?.tr("settings.description")
     pointSize: Style.fontSizeM
     color: Color.mOnSurface
     wrapMode: Text.WordWrap
@@ -20,7 +20,7 @@ ColumnLayout {
 
   NText {
     Layout.fillWidth: true
-    text: pluginApi?.tr("settings.dependency") || "Dependency: wl-mirror"
+    text: pluginApi?.tr("settings.dependency")
     pointSize: Style.fontSizeS
     color: Color.mOnSurfaceVariant
   }

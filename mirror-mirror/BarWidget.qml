@@ -19,8 +19,8 @@ NIconButton {
   customRadius: Style.radiusL
   icon: "screen-share"
   tooltipText: mirroring
-    ? (pluginApi?.tr("bar.tooltip.active") || "Mirror is active")
-    : (pluginApi?.tr("bar.tooltip.inactive") || "Mirror displays")
+    ? pluginApi?.tr("bar.tooltip.active")
+    : pluginApi?.tr("bar.tooltip.inactive")
   tooltipDirection: BarService.getTooltipDirection(screenName)
 
   colorBg: mirroring ? Color.mError : Style.capsuleColor
@@ -43,7 +43,7 @@ NIconButton {
 
     model: [
       {
-        "label": pluginApi?.tr("bar.context.widgetSettings") || "Widget Settings",
+        "label": pluginApi?.tr("bar.context.widgetSettings"),
         "action": "widget-settings",
         "icon": "settings"
       }
