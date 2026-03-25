@@ -8,6 +8,11 @@ Item {
 
   property var pluginApi: null
   readonly property var defaults: pluginApi?.manifest?.metadata?.defaultSettings ?? ({})
+  readonly property string untitledLabel: pluginApi?.tr("common.untitled") ?? ""
+  readonly property string customUrlLabel: pluginApi?.tr("common.customUrl") ?? ""
+  readonly property string downloadedTrackLabel: pluginApi?.tr("common.downloadedTrack") ?? ""
+  readonly property string queuedUrlLabel: pluginApi?.tr("common.queuedUrl") ?? ""
+  readonly property string playlistEmptyNotice: pluginApi?.tr("notices.playlistEmpty") ?? ""
 
   property bool isPlaying: false
   property string currentEntryId: ""
@@ -81,6 +86,7 @@ Item {
   property var libraryEntries: []
   property var playlistEntries: []
   property var queueEntries: []
+  property string lastQueueSnapshot: ""
   property bool queueActive: false
   property string pendingPlaylistCreateName: ""
   property string pendingPlaylistCreateEntryId: ""
@@ -103,6 +109,7 @@ Item {
   property bool playbackStarting: false
   property string playbackStartingProvider: ""
   property string playbackStartingMessage: ""
+  property bool pendingPlaybackFailureFallback: false
   property bool statusBusy: false
   property bool libraryBusy: false
   property bool downloadBusy: false
@@ -195,7 +202,7 @@ Item {
     stderr: StdioCollector {}
 
     onExited: function (exitCode) {
-      var commandAction = String(root.playbackCommandAction || "");
+      var commandAction = root.playbackCommandAction || "";
       root.playbackCommandAction = "";
       root.playbackBusy = false;
       root.playbackStarting = false;
@@ -219,11 +226,17 @@ Item {
         root.queueLaunchBusy = false;
       }
 
-      if (exitCode !== 0 && root.lastError === "") {
+      if (commandAction === "play" && exitCode !== 0 && stderrText.length === 0) {
+        root.pendingPlaybackFailureFallback = true;
+      } else {
+        root.pendingPlaybackFailureFallback = false;
+      }
+
+      if (exitCode !== 0 && root.lastError === "" && !root.pendingPlaybackFailureFallback) {
         root.lastError = root.pluginApi?.tr("errors.playbackFailed");
       }
 
-      root.refreshStatus();
+      root.refreshStatus(true);
     }
   }
 
@@ -235,6 +248,13 @@ Item {
     onExited: function () {
       root.statusBusy = false;
       root.applyState(String(statusProcess.stdout.text || "").trim());
+
+      if (root.pendingPlaybackFailureFallback) {
+        if (!root.isPlaying) {
+          root.lastError = root.pluginApi?.tr("errors.playbackFailed");
+        }
+        root.pendingPlaybackFailureFallback = false;
+      }
     }
   }
 
@@ -291,7 +311,7 @@ Item {
     onExited: function (exitCode) {
       root.queueBusy = false;
 
-      var action = String(root.queueCommandAction || "");
+      var action = root.queueCommandAction || "";
       root.queueCommandAction = "";
       var output = String(queueProcess.stdout.text || "").trim();
       var stderrText = String(queueProcess.stderr.text || "").trim();
@@ -304,11 +324,11 @@ Item {
         if (action === "enqueue") {
           root.lastNotice = root.pluginApi?.tr("notices.addedToQueue");
         } else if (action === "remove") {
-          root.lastNotice = "Removed queued track.";
+          root.lastNotice = root.pluginApi?.tr("queue.removed");
         } else if (action === "remove-silent") {
           root.lastNotice = "";
         } else if (action === "clear") {
-          root.lastNotice = "Queue cleared.";
+          root.lastNotice = root.pluginApi?.tr("queue.cleared");
         } else if (action === "load-library") {
           if (root.pendingAutoplaySaved || root.pendingAutoplaySavedShuffle) {
             var shouldShuffle = root.pendingAutoplaySavedShuffle;
@@ -317,13 +337,13 @@ Item {
             if (root.queueEntries.length > 0) {
               root.startQueue();
               if (!root.isPlaying) {
-                root.lastNotice = shouldShuffle ? "Playing shuffled saved tracks." : "Playing saved tracks.";
+                root.lastNotice = shouldShuffle ? root.pluginApi?.tr("queue.playingShuffledSaved") : root.pluginApi?.tr("queue.playingSaved");
               }
             } else {
-              root.lastNotice = "Saved library is empty.";
+              root.lastNotice = root.pluginApi?.tr("queue.savedEmpty");
             }
           } else {
-            root.lastNotice = root.queueEntries.length > 0 ? "Queue loaded." : "Queue is empty.";
+            root.lastNotice = root.queueEntries.length > 0 ? root.pluginApi?.tr("queue.loaded") : root.pluginApi?.tr("queue.loadedEmpty");
           }
         } else {
           root.lastNotice = "";
@@ -450,7 +470,7 @@ Item {
         root.lastError = stderrText.length > 0 ? stderrText : (root.pluginApi?.tr("errors.seekFailed"));
       }
 
-      var pendingSeek = Number(root.pendingSeekPosition);
+      var pendingSeek = root.pendingSeekPosition;
       root.pendingSeekPosition = -1;
 
       if (isFinite(pendingSeek) && pendingSeek >= 0) {
@@ -513,7 +533,7 @@ Item {
         root.lastError = "";
         root.lastNotice = root.providerSuccessNotice.length > 0
             ? root.providerSuccessNotice
-            : ("Switched to " + root.providerLabel(root.currentProvider) + ".");
+            : (root.pluginApi?.tr("notices.switchedTo", {"provider": root.providerLabel(root.currentProvider)}));
       } else {
         var stderrText = String(providerProcess.stderr.text || "").trim();
         if (stderrText.length > 0) {
@@ -595,26 +615,34 @@ Item {
       root.openLauncher();
     }
 
+    function panel() {
+      root.openPanel();
+    }
+
+    function togglePanel() {
+      root.togglePanelView();
+    }
+
     function play(url: string) {
-      var target = String(url || "").trim();
+      var target = (url || "").trim();
       if (target.length === 0) {
         return;
       }
-      root.playUrl(target, "Custom URL");
+      root.playUrl(target, root.customUrlLabel);
     }
 
-    function playEntry(entryId: string, title: string, url: string, uploader: string, duration: string) {
-      var target = String(url || "").trim();
+    function playEntry(entryId: string, title: string, url: string, uploader: string, duration: real) {
+      var target = (url || "").trim();
       if (target.length === 0) {
         return;
       }
 
       root.playEntry({
-                       "id": String(entryId || "").trim(),
-                       "title": String(title || "").trim() || "Untitled",
+                       "id": (entryId || "").trim(),
+                       "title": (title || "").trim() || root.untitledLabel,
                        "url": target,
-                       "uploader": String(uploader || "").trim(),
-                       "duration": Number(duration || 0)
+                       "uploader": (uploader || "").trim(),
+                       "duration": duration || 0
                      });
     }
 
@@ -631,23 +659,23 @@ Item {
     }
 
     function seek(position: real) {
-      root.seekToPosition(Number(position));
+      root.seekToPosition(position);
     }
 
     function speed(value: real) {
-      root.setSpeed(Number(value));
+      root.setSpeed(value);
     }
 
     function setProvider(provider: string) {
-      root.setProvider(String(provider || "").trim());
+      root.setProvider((provider || "").trim());
     }
 
     function renamePlaylist(playlistId: string, name: string) {
-      root.renamePlaylist(String(playlistId || "").trim(), String(name || "").trim());
+      root.renamePlaylist((playlistId || "").trim(), (name || "").trim());
     }
 
     function save(url: string) {
-      var target = String(url || "").trim();
+      var target = (url || "").trim();
       if (target.length === 0) {
         return;
       }
@@ -675,8 +703,22 @@ Item {
     return buildCommand(command);
   }
 
+  function textValue(value) {
+    if (typeof value === "string") {
+      return value;
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+      return String(value);
+    }
+    return "";
+  }
+
+  function trimmedText(value) {
+    return textValue(value).trim();
+  }
+
   function normalizeUrl(value) {
-    var trimmed = String(value || "").trim();
+    var trimmed = trimmedText(value);
     if (trimmed.startsWith("www.")) {
       return "https://" + trimmed;
     }
@@ -684,12 +726,12 @@ Item {
   }
 
   function inferProviderForEntry(entry) {
-    var explicitProvider = String(entry?.provider || "").trim().toLowerCase();
+    var explicitProvider = trimmedText(entry?.providerName || entry?.provider).toLowerCase();
     if (explicitProvider === "youtube" || explicitProvider === "soundcloud" || explicitProvider === "local") {
       return explicitProvider;
     }
 
-    var entryUrl = String(entry?.url || "").trim();
+    var entryUrl = trimmedText(entry?.url);
     if (entryUrl.startsWith("/")) {
       return "local";
     }
@@ -699,7 +741,7 @@ Item {
     if (entryUrl.indexOf("soundcloud.com") >= 0) {
       return "soundcloud";
     }
-    return String(root.currentProvider || "youtube");
+    return root.currentProvider || "youtube";
   }
 
   function startupMessageForEntry(entry) {
@@ -715,11 +757,11 @@ Item {
 
   function currentTrackEntry() {
     return {
-      "id": String(root.currentEntryId || ""),
-      "title": String(root.currentTitle || "Untitled"),
-      "url": String(root.currentUrl || ""),
-      "uploader": String(root.currentUploader || ""),
-      "duration": Number(root.currentDuration || 0),
+      "id": root.currentEntryId || "",
+      "title": root.currentTitle || root.untitledLabel,
+      "url": root.currentUrl || "",
+      "uploader": root.currentUploader || "",
+      "duration": root.currentDuration || 0,
       "provider": inferProviderForEntry({
                                           "provider": root.currentProvider,
                                           "url": root.currentUrl
@@ -732,11 +774,11 @@ Item {
   }
 
   function isPlaceholderEntryTitle(title) {
-    var normalized = String(title || "").trim().toLowerCase();
+    var normalized = trimmedText(title).toLowerCase();
     return normalized.length === 0
-        || normalized === "custom url"
-        || normalized === "queued url"
-        || normalized === "downloaded track";
+        || normalized === root.customUrlLabel.toLowerCase()
+        || normalized === root.queuedUrlLabel.toLowerCase()
+        || normalized === root.downloadedTrackLabel.toLowerCase();
   }
 
   function playEntry(entry) {
@@ -746,18 +788,19 @@ Item {
 
     root.lastError = "";
     root.lastNotice = "";
+    root.pendingPlaybackFailureFallback = false;
     root.playbackBusy = true;
     root.playbackStarting = true;
     root.playbackStartingProvider = inferProviderForEntry(entry);
     root.playbackStartingMessage = startupMessageForEntry(entry);
     root.isPlaying = false;
     root.isPaused = false;
-    root.currentEntryId = String(entry.id || "");
-    root.currentTitle = String(entry.title || "Untitled");
-    root.currentUrl = String(entry.url || "");
-    root.currentUploader = String(entry.uploader || "");
-    root.currentDuration = Number(entry.duration || 0);
-    root.currentSpeed = 1;
+    root.currentEntryId = entry.id || "";
+    root.currentTitle = entry.title || root.untitledLabel;
+    root.currentUrl = entry.url || "";
+    root.currentUploader = entry.uploader || "";
+    root.currentDuration = entry.duration || 0;
+    root.currentSpeed = root.clampSpeed(root.currentSpeed || 1);
     root.currentPid = 0;
     root.currentPosition = 0;
     root.currentEndReason = "";
@@ -766,7 +809,7 @@ Item {
                            "command": buildCommand([
                                                     "play",
                                                     entry.id || "",
-                                                    entry.title || "Untitled",
+                                                    entry.title || root.untitledLabel,
                                                     entry.url || "",
                                                     entry.uploader || "",
                                                     String(entry.duration || 0)
@@ -782,7 +825,7 @@ Item {
 
     var customEntry = {
       "id": "custom-" + Date.now(),
-      "title": label || "Custom URL",
+      "title": label || root.customUrlLabel,
       "url": cleanedUrl,
       "uploader": "",
       "duration": 0
@@ -850,8 +893,8 @@ Item {
       return;
     }
 
-    var duration = Number(root.currentDuration || 0);
-    var target = Number(position);
+    var duration = root.currentDuration || 0;
+    var target = position;
     if (!isFinite(duration) || duration <= 0 || !isFinite(target)) {
       return;
     }
@@ -868,8 +911,8 @@ Item {
   }
 
   function seekToRatio(ratio) {
-    var duration = Number(root.currentDuration || 0);
-    var targetRatio = Number(ratio);
+    var duration = root.currentDuration || 0;
+    var targetRatio = ratio;
     if (!isFinite(duration) || duration <= 0 || !isFinite(targetRatio)) {
       return;
     }
@@ -924,10 +967,10 @@ Item {
   }
 
   function providerLabel(provider) {
-    var p = String(provider || root.currentProvider);
-    if (p === "youtube") return "YouTube";
-    if (p === "soundcloud") return "SoundCloud";
-    if (p === "local") return "Local";
+    var p = provider || root.currentProvider;
+    if (p === "youtube") return root.pluginApi?.tr("providers.youtube");
+    if (p === "soundcloud") return root.pluginApi?.tr("providers.soundcloud");
+    if (p === "local") return root.pluginApi?.tr("providers.local");
     return p;
   }
 
@@ -1060,11 +1103,11 @@ Item {
   }
 
   function sortLabel(sortBy) {
-    var s = String(sortBy || root.currentSortBy);
-    if (s === "date") return "Date";
-    if (s === "title") return "Title";
-    if (s === "duration") return "Duration";
-    if (s === "rating") return "Rating";
+    var s = sortBy || root.currentSortBy;
+    if (s === "date") return root.pluginApi?.tr("sort.date");
+    if (s === "title") return root.pluginApi?.tr("sort.title");
+    if (s === "duration") return root.pluginApi?.tr("sort.duration");
+    if (s === "rating") return root.pluginApi?.tr("sort.rating");
     return s;
   }
 
@@ -1101,18 +1144,35 @@ Item {
   function copyEntry(entry) {
     return {
       "id": entry?.id ?? "",
-      "title": String(entry?.title || entry?.name || "Untitled"),
-      "url": String(entry?.url || ""),
-      "uploader": String(entry?.uploader || ""),
-      "duration": Number(entry?.duration || 0),
-      "provider": String(entry?.provider || ""),
-      "album": String(entry?.album || ""),
-      "localPath": String(entry?.localPath || ""),
+      "title": entry?.title || entry?.name || root.untitledLabel,
+      "url": entry?.url ?? "",
+      "uploader": entry?.uploader ?? "",
+      "duration": entry?.duration ?? 0,
+      "provider": entry?.provider ?? "",
+      "album": entry?.album ?? "",
+      "localPath": entry?.localPath ?? "",
+      "isSaved": root.entrySavedState(entry),
       "tags": entry?.tags || [],
-      "rating": Number(entry?.rating || 0),
-      "playCount": Number(entry?.playCount || 0),
-      "lastPlayedAt": String(entry?.lastPlayedAt || "")
+      "rating": entry?.rating ?? 0,
+      "playCount": entry?.playCount ?? 0,
+      "lastPlayedAt": entry?.lastPlayedAt ?? ""
     };
+  }
+
+  function entrySavedState(entry) {
+    if (!entry) {
+      return false;
+    }
+
+    if (entry.isSaved === false) {
+      return false;
+    }
+
+    if (entry.isSaved === true) {
+      return true;
+    }
+
+    return root.isSaved(entry);
   }
 
   function shuffleEntries(entries) {
@@ -1255,10 +1315,11 @@ Item {
       queueBatchProcess.exec({
                                "command": buildQueueCommand("enqueue", [
                                                                entry.id || "",
-                                                               entry.title || "Untitled",
+                                                               entry.title || root.untitledLabel,
                                                                entry.url || "",
                                                                entry.uploader || "",
-                                                               String(entry.duration || 0)
+                                                               String(entry.duration || 0),
+                                                               root.entrySavedState(entry)
                                                              ])
                              });
       return;
@@ -1295,7 +1356,7 @@ Item {
     var clearFirst = options?.clearFirst === true;
     var finalAction = String(options?.finalAction || "").trim();
     var doneNotice = String(options?.doneNotice || "").trim();
-    var emptyNotice = String(options?.emptyNotice || "Playlist is empty.").trim();
+    var emptyNotice = String(options?.emptyNotice || root.playlistEmptyNotice).trim();
 
     if (filteredEntries.length === 0) {
       root.lastError = "";
@@ -1326,7 +1387,7 @@ Item {
   function queuePlaylist(playlistId, shuffle) {
     var playlist = findPlaylistById(playlistId);
     var entries = playlistTracks(playlistId, shuffle);
-    var playlistName = String(playlist?.name || "playlist");
+    var playlistName = playlist?.name || root.pluginApi?.tr("playlists.untitled");
     startQueueBatch(entries, {
                       "clearFirst": false,
                       "doneNotice": shuffle === true
@@ -1345,7 +1406,7 @@ Item {
       return;
     }
 
-    var playlistName = String(playlist?.name || "playlist");
+    var playlistName = playlist?.name || root.pluginApi?.tr("playlists.untitled");
     startQueueBatch(entries, {
                       "clearFirst": true,
                       "finalAction": "skip",
@@ -1358,6 +1419,11 @@ Item {
 
   function applyQueue(rawText) {
     var text = String(rawText || "").trim();
+    if (text === root.lastQueueSnapshot) {
+      return;
+    }
+
+    root.lastQueueSnapshot = text;
     if (text.length === 0) {
       root.queueEntries = [];
       return;
@@ -1368,12 +1434,13 @@ Item {
       if (Array.isArray(parsed)) {
         root.queueEntries = parsed.map(function (entry) {
           return {
-            "id": String(entry?.id || ""),
-            "title": String(entry?.title || "Untitled"),
-            "url": String(entry?.url || ""),
-            "uploader": String(entry?.uploader || ""),
-            "duration": Number(entry?.duration || 0),
-            "queuedAt": String(entry?.queuedAt || "")
+            "id": entry?.id ?? "",
+            "title": entry?.title || root.untitledLabel,
+            "url": entry?.url ?? "",
+            "uploader": entry?.uploader ?? "",
+            "duration": entry?.duration ?? 0,
+            "isSaved": typeof entry?.isSaved === "boolean" ? entry.isSaved : undefined,
+            "queuedAt": entry?.queuedAt ?? ""
           };
         });
       } else {
@@ -1447,7 +1514,7 @@ Item {
     if (root.queueEntries.length === 0) {
       root.queueActive = false;
       root.lastError = "";
-      root.lastNotice = "Queue is empty.";
+      root.lastNotice = root.pluginApi?.tr("queue.loadedEmpty");
       return;
     }
 
@@ -1456,7 +1523,7 @@ Item {
       root.launchQueueEntry(root.queueEntries[0]);
     } else {
       root.lastError = "";
-      root.lastNotice = "Queue armed. It will start after the current song finishes.";
+      root.lastNotice = root.pluginApi?.tr("queue.armed");
     }
   }
 
@@ -1465,14 +1532,14 @@ Item {
     root.pendingAutoplaySaved = false;
     root.pendingAutoplaySavedShuffle = false;
     root.lastError = "";
-    root.lastNotice = "Queue stopped.";
+    root.lastNotice = root.pluginApi?.tr("queue.stopped");
   }
 
   function skipQueue() {
     if (root.queueEntries.length === 0) {
       root.queueActive = false;
       root.lastError = "";
-      root.lastNotice = "No next queued track.";
+      root.lastNotice = root.pluginApi?.tr("queue.noNext");
       return;
     }
 
@@ -1488,7 +1555,7 @@ Item {
     root.pendingAutoplaySaved = shuffle !== true;
     root.pendingAutoplaySavedShuffle = shuffle === true;
     root.lastError = "";
-    root.lastNotice = shuffle === true ? "Loading saved tracks into shuffled queue..." : "Loading saved tracks into queue...";
+    root.lastNotice = shuffle === true ? root.pluginApi?.tr("queue.loadingShuffledSaved") : root.pluginApi?.tr("queue.loadingSaved");
     root.queueBusy = true;
     root.queueCommandAction = "load-library";
     queueProcess.exec({
@@ -1501,19 +1568,19 @@ Item {
       return;
     }
 
-    var entryUrl = String(entry.url || "").trim();
-    var effectiveTitle = String(entry.title || entry.name || "").trim();
-    var effectiveUploader = String(entry.uploader || "").trim();
-    var effectiveDuration = Number(entry.duration || 0);
+    var entryUrl = trimmedText(entry.url);
+    var effectiveTitle = trimmedText(entry.title || entry.name);
+    var effectiveUploader = trimmedText(entry.uploader);
+    var effectiveDuration = entry.duration || 0;
     var usingCurrentPlayback = entryUrl.length > 0 && entryUrl === root.currentUrl;
 
     if (usingCurrentPlayback && !isPlaceholderEntryTitle(root.currentTitle)) {
-      effectiveTitle = String(root.currentTitle || "").trim();
-      if (effectiveUploader.length === 0 && String(root.currentUploader || "").trim().length > 0) {
-        effectiveUploader = String(root.currentUploader || "").trim();
+      effectiveTitle = trimmedText(root.currentTitle);
+      if (effectiveUploader.length === 0 && trimmedText(root.currentUploader).length > 0) {
+        effectiveUploader = trimmedText(root.currentUploader);
       }
-      if ((!isFinite(effectiveDuration) || effectiveDuration <= 0) && Number(root.currentDuration || 0) > 0) {
-        effectiveDuration = Number(root.currentDuration || 0);
+      if ((!isFinite(effectiveDuration) || effectiveDuration <= 0) && (root.currentDuration || 0) > 0) {
+        effectiveDuration = root.currentDuration || 0;
       }
     }
 
@@ -1523,12 +1590,12 @@ Item {
     }
 
     if (effectiveTitle.length === 0 && usingCurrentPlayback) {
-      effectiveTitle = String(root.currentTitle || "").trim();
+      effectiveTitle = trimmedText(root.currentTitle);
       if (effectiveUploader.length === 0) {
-        effectiveUploader = String(root.currentUploader || "").trim();
+        effectiveUploader = trimmedText(root.currentUploader);
       }
       if (!isFinite(effectiveDuration) || effectiveDuration <= 0) {
-        effectiveDuration = Number(root.currentDuration || 0);
+        effectiveDuration = root.currentDuration || 0;
       }
     }
 
@@ -1539,7 +1606,7 @@ Item {
                           "command": buildCommand([
                                                    "save",
                                                    entry.id || "",
-                                                   effectiveTitle || "Untitled",
+                                                   effectiveTitle || root.untitledLabel,
                                                    entryUrl,
                                                    effectiveUploader,
                                                    String(isFinite(effectiveDuration) ? effectiveDuration : 0)
@@ -1637,7 +1704,7 @@ Item {
     downloadProcess.exec({
                            "command": buildCommand([
                                                     "download-mp3",
-                                                    entry.title || "Downloaded Track",
+                                                    entry.title || root.downloadedTrackLabel,
                                                     entry.url || ""
                                                   ])
                          });
@@ -1669,7 +1736,7 @@ Item {
     }
 
     downloadEntry({
-                    "title": label || "Downloaded Track",
+                    "title": label || root.downloadedTrackLabel,
                     "url": cleanedUrl
                   });
   }
@@ -1684,12 +1751,13 @@ Item {
     root.queueBusy = true;
     root.queueCommandAction = "enqueue";
     queueProcess.exec({
-                        "command": buildQueueCommand("enqueue", [
+                         "command": buildQueueCommand("enqueue", [
                                                        entry.id || "",
-                                                       entry.title || entry.name || "Untitled",
+                                                       entry.title || entry.name || root.untitledLabel,
                                                        entry.url || "",
                                                        entry.uploader || "",
-                                                       String(entry.duration || 0)
+                                                       String(entry.duration || 0),
+                                                       root.entrySavedState(entry)
                                                      ])
                       });
   }
@@ -1702,7 +1770,7 @@ Item {
 
     enqueueEntry({
                    "id": "queued-" + Date.now(),
-                   "title": label || "Queued URL",
+                   "title": label || root.queuedUrlLabel,
                    "url": cleanedUrl,
                    "uploader": "",
                    "duration": 0
@@ -1769,6 +1837,32 @@ Item {
     return null;
   }
 
+  function syncCurrentPlaybackMetadataFromLibrary() {
+    var activeEntry = root.findLibraryEntry({
+                                              "id": root.currentEntryId,
+                                              "url": root.currentUrl
+                                            });
+    if (!activeEntry) {
+      return;
+    }
+
+    var libraryTitle = String(activeEntry.title || "").trim();
+    var libraryUploader = String(activeEntry.uploader || "").trim();
+    var libraryDuration = Number(activeEntry.duration || 0);
+
+    if (libraryTitle.length > 0) {
+      root.currentTitle = libraryTitle;
+    }
+
+    if (libraryUploader.length > 0 || (root.currentUploader || "").trim().length === 0) {
+      root.currentUploader = libraryUploader;
+    }
+
+    if (isFinite(libraryDuration) && libraryDuration > 0) {
+      root.currentDuration = libraryDuration;
+    }
+  }
+
   function refreshStatus(forceRefresh) {
     if ((root.statusBusy || root.playbackBusy) && forceRefresh !== true) {
       return;
@@ -1790,6 +1884,26 @@ Item {
     });
   }
 
+  function openPanel() {
+    if (!pluginApi) {
+      return;
+    }
+
+    pluginApi.withCurrentScreen(function (screen) {
+      pluginApi.openPanel(screen);
+    });
+  }
+
+  function togglePanelView() {
+    if (!pluginApi) {
+      return;
+    }
+
+    pluginApi.withCurrentScreen(function (screen) {
+      pluginApi.togglePanel(screen);
+    });
+  }
+
   function applyState(rawText) {
     var text = String(rawText || "").trim();
     if (text.length === 0) {
@@ -1807,11 +1921,12 @@ Item {
       root.currentUrl = state.url || "";
       root.currentUploader = state.uploader || "";
       root.currentDuration = state.duration || 0;
-      root.currentSpeed = Number(state.speed || 1) || 1;
+      root.currentSpeed = state.speed || 1;
       root.currentPid = state.pid || 0;
       root.lastError = state.error || "";
       root.currentEndReason = state.endReason || "";
       root.currentUpdatedAt = state.updatedAt || "0";
+      root.syncCurrentPlaybackMetadataFromLibrary();
       if ((root.currentEntryId && root.currentEntryId === previousEntryId) || (root.currentUrl && root.currentUrl === previousUrl) || state.isPlaying !== true) {
         root.playbackStarting = false;
         root.playbackStartingProvider = "";
@@ -1819,7 +1934,7 @@ Item {
       }
       if (!state.isPlaying) {
         root.currentPosition = 0;
-        root.currentSpeed = Number(state.speed || 1) || 1;
+        root.currentSpeed = state.speed || 1;
       } else if (root.currentEntryId !== previousEntryId || root.currentUrl !== previousUrl) {
         root.currentPosition = 0;
       }
@@ -1831,7 +1946,7 @@ Item {
         root.queueLaunchBusy = false;
         root.removeQueueEntry(root.pendingQueueLaunchEntry.id, false);
         root.lastError = "";
-        root.lastNotice = "Queued playback: " + (root.pendingQueueLaunchEntry.title || "Untitled");
+        root.lastNotice = root.pluginApi?.tr("queue.nowPlaying", {"title": root.pendingQueueLaunchEntry.title || root.pluginApi?.tr("common.untitled")});
         root.pendingQueueLaunchEntry = null;
         root.pendingQueueLaunchEntryId = "";
       }
@@ -1849,10 +1964,10 @@ Item {
           root.queueActive = false;
           if (root.currentEndReason === "error") {
             root.lastNotice = "";
-            root.lastError = "Queue ran out after a playback error.";
+            root.lastError = root.pluginApi?.tr("queue.errorExhausted");
           } else {
             root.lastError = "";
-            root.lastNotice = "Queue finished.";
+            root.lastNotice = root.pluginApi?.tr("queue.finished");
           }
         }
       }
@@ -1873,22 +1988,23 @@ Item {
       if (Array.isArray(parsed)) {
         root.libraryEntries = parsed.map(function (entry) {
           return {
-            "id": String(entry?.id || ""),
-            "title": String(entry?.title || "Untitled"),
-            "url": String(entry?.url || ""),
-            "uploader": String(entry?.uploader || ""),
-            "duration": Number(entry?.duration || 0),
-            "savedAt": String(entry?.savedAt || ""),
-            "provider": String(entry?.provider || ""),
-            "album": String(entry?.album || ""),
-            "localPath": String(entry?.localPath || ""),
+            "id": entry?.id ?? "",
+            "title": entry?.title || root.untitledLabel,
+            "url": entry?.url ?? "",
+            "uploader": entry?.uploader ?? "",
+            "duration": entry?.duration ?? 0,
+            "savedAt": entry?.savedAt ?? "",
+            "provider": entry?.provider ?? "",
+            "album": entry?.album ?? "",
+            "localPath": entry?.localPath ?? "",
             "isSaved": entry?.isSaved !== false,
             "tags": Array.isArray(entry?.tags) ? entry.tags : [],
-            "rating": Number(entry?.rating || 0),
-            "playCount": Number(entry?.playCount || 0),
-            "lastPlayedAt": String(entry?.lastPlayedAt || "")
+            "rating": entry?.rating ?? 0,
+            "playCount": entry?.playCount ?? 0,
+            "lastPlayedAt": entry?.lastPlayedAt ?? ""
           };
         });
+        root.syncCurrentPlaybackMetadataFromLibrary();
       } else {
         root.libraryEntries = [];
       }
@@ -1915,7 +2031,7 @@ Item {
       root.currentProvider = settings.activeProvider || "youtube";
       root.currentSortBy = settings.sortBy || "date";
       root.downloadDirectory = settings.downloadDirectory || (Quickshell.env("HOME") + "/Music/Noctalia");
-      root.downloadCacheMaxMb = Number(settings.downloadCacheMaxMb || 0);
+      root.downloadCacheMaxMb = settings.downloadCacheMaxMb || 0;
       root.ytPlayerClient = settings.ytPlayerClient || "android";
     } catch (error) {
       Logger.w("MusicSearch", "Failed to parse music settings:", error);

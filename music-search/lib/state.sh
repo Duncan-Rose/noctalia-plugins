@@ -51,6 +51,17 @@ state_field() {
   jq -r "$field" "$STATE_FILE"
 }
 
+current_state_speed() {
+  safe_read_json "$STATE_FILE"
+  local speed
+  speed="$(jq -r '(.speed // 1) | tonumber? // 1' "$STATE_FILE" 2>/dev/null || printf '1')"
+  if [[ -z "$speed" || "$speed" == "null" ]]; then
+    printf '1\n'
+    return 0
+  fi
+  printf '%s\n' "$speed"
+}
+
 _write_current_state_error_unlocked() {
   local error_message="$1"
   safe_read_json "$STATE_FILE"

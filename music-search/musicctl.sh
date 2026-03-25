@@ -132,7 +132,7 @@ case "$command" in
     list_queue
     ;;
   queue-enqueue)
-    queue_enqueue "${1-}" "${2-}" "${3-}" "${4-}" "${5-0}"
+    queue_enqueue "${1-}" "${2-}" "${3-}" "${4-}" "${5-0}" "${6-true}"
     ;;
   queue-remove)
     queue_remove "${1-}"

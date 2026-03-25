@@ -159,7 +159,7 @@ Item {
     return [
           {
             "name": commandName,
-            "description": pluginApi?.tr("command.description", {"provider": mainInstance?.providerLabel() || "YouTube"}),
+            "description": pluginApi?.tr("command.description", {"provider": mainInstance?.providerLabel() || pluginApi?.tr("providers.youtube")}),
             "icon": "music",
             "isTablerIcon": true,
             "isImage": false,
@@ -219,6 +219,14 @@ Item {
       return "";
     }
     return plays === 1 ? (pluginApi?.tr("common.onePlay")) : (pluginApi?.tr("common.plays", {"count": plays}));
+  }
+
+  function formatSpeedLabel(value) {
+    var speed = value ?? 1;
+    if (!isFinite(speed) || speed <= 0) {
+      speed = 1;
+    }
+    return pluginApi?.tr("speed.multiplier", {"speed": speed.toFixed(2)});
   }
 
   function buildDescription(entry, prefix) {
@@ -281,6 +289,7 @@ Item {
       "url": entry?.url || "",
       "uploader": entry?.uploader || "",
       "duration": entry?.duration || 0,
+      "isSaved": typeof entry?.isSaved === "boolean" ? entry.isSaved : undefined,
       "savedAt": entry?.savedAt || "",
       "providerName": entry?.provider || "",
       "album": entry?.album || "",
@@ -817,7 +826,7 @@ Item {
 
   function buildSpeedItem(value) {
     var target = Number(value);
-    var speedLabel = isFinite(target) ? target.toFixed(2) + "x" : (value || "");
+    var speedLabel = isFinite(target) ? formatSpeedLabel(target) : (value || "");
     return {
       "id": "speed:" + speedLabel,
       "name": pluginApi?.tr("speed.setTo", {"speed": speedLabel}),
@@ -840,10 +849,13 @@ Item {
           ];
     }
 
-    var currentSpeed = Number(mainInstance?.currentSpeed || 1);
+    var currentSpeed = mainInstance?.currentSpeed ?? 1;
+    if (!isFinite(currentSpeed) || currentSpeed <= 0) {
+      currentSpeed = 1;
+    }
     var queryText = (speedQuery || "").trim();
     var items = [
-          buildSectionItem(pluginApi?.tr("speed.title"), pluginApi?.tr("speed.current", {"speed": currentSpeed.toFixed(2) + "x"}), "gauge")
+          buildSectionItem(pluginApi?.tr("speed.title"), pluginApi?.tr("speed.current", {"speed": formatSpeedLabel(currentSpeed)}), "gauge")
         ];
 
     if (queryText.length === 0) {
@@ -881,7 +893,10 @@ Item {
   }
 
   function buildQueueEntryItem(entry, index) {
-    var prefix = index === 0 ? "Next up" : "Queued";
+    var prefix = index === 0 ? pluginApi?.tr("queue.nextUp") : pluginApi?.tr("queue.queued");
+    var saved = entry?.isSaved === false
+        ? false
+        : (entry?.isSaved === true || mainInstance?.isSaved(entry) === true);
     return {
       "id": entry?.id || ("queue:" + index),
       "name": entry?.title || pluginApi?.tr("common.untitled"),
@@ -894,6 +909,7 @@ Item {
       "url": entry?.url || "",
       "uploader": entry?.uploader || "",
       "duration": entry?.duration || 0,
+      "isSaved": saved,
       "providerName": entry?.provider || "",
       "queuedAt": entry?.queuedAt || "",
       "position": index,
@@ -1170,7 +1186,9 @@ Item {
       previewItem[key] = item[key];
     }
 
-    previewItem.isSaved = mainInstance?.isSaved(item) === true;
+    previewItem.isSaved = item?.isSaved === false
+        ? false
+        : (item?.isSaved === true || mainInstance?.isSaved(item) === true);
     previewItem.isPlaying = mainInstance?.isPlaying === true && ((item.id && mainInstance?.currentEntryId === item.id) || (!!item.url && mainInstance?.currentUrl === item.url));
     previewItem.isStarting = mainInstance?.playbackStarting === true && ((item.id && mainInstance?.currentEntryId === item.id) || (!!item.url && mainInstance?.currentUrl === item.url));
     previewItem.isPaused = mainInstance?.isPaused === true;
@@ -1182,9 +1200,9 @@ Item {
     previewItem.sourceLabel = item.kind === "library"
         ? (pluginApi?.tr("library.label"))
         : (item.kind === "queue-entry"
-               ? "Queue"
+               ? (pluginApi?.tr("queue.title"))
         : (item.kind === "search"
-               ? (mainInstance?.providerLabel(itemProviderKey(item)) || "YouTube")
+               ? (mainInstance?.providerLabel(itemProviderKey(item)) || pluginApi?.tr("providers.youtube"))
                : (item.kind === "custom-url" || item.kind === "save-url" ? (pluginApi?.tr("common.customUrl")) : (pluginApi?.tr("common.music")))));
     return previewItem;
   }
@@ -1323,7 +1341,7 @@ Item {
     var searchContext = parseSearchProviderQuery(query);
     var searchQuery = (searchContext.query || "").trim();
     var searchProvider = (searchContext.provider || mainInstance?.currentProvider || "youtube");
-    var searchProviderLabel = mainInstance?.providerLabel(searchProvider) || "YouTube";
+    var searchProviderLabel = mainInstance?.providerLabel(searchProvider) || pluginApi?.tr("providers.youtube");
 
     if (searchContext.explicit && searchQuery.length === 0) {
       results.push(buildSearchHintItem(pluginApi?.tr("search.typeMore", {"provider": searchProviderLabel})));
@@ -1564,12 +1582,12 @@ Item {
       "duration": mainInstance?.currentDuration || 0,
       "tags": savedCurrentEntry?.tags || []
     };
-    var providerName = mainInstance?.providerLabel() || "YouTube";
+    var providerName = mainInstance?.providerLabel() || pluginApi?.tr("providers.youtube");
     var description = playing ? buildDescription({
                                                   "uploader": mainInstance?.currentUploader || "",
                                                   "duration": mainInstance?.currentDuration || 0
                                                 }, pluginApi?.tr("status.backgroundPlayback")) : (starting
-                                                     ? (mainInstance?.playbackStartingMessage || (pluginApi?.tr("status.startingProviderPlayback", {"provider": mainInstance?.providerLabel() || "music"})))
+                                                     ? (mainInstance?.playbackStartingMessage || (pluginApi?.tr("status.startingProviderPlayback", {"provider": providerName})))
                                                      : (mainInstance?.lastError ? (pluginApi?.tr("errors.lastError", {"error": mainInstance.lastError})) : (mainInstance?.lastNotice || (pluginApi?.tr("status.searchPrompt", {"provider": providerName})))));
 
     return {
@@ -1622,7 +1640,7 @@ Item {
 
   function buildLoadingItem(query, provider) {
     return {
-      "name": pluginApi?.tr("search.searching", {"provider": mainInstance?.providerLabel(provider) || "YouTube"}),
+      "name": pluginApi?.tr("search.searching", {"provider": mainInstance?.providerLabel(provider) || pluginApi?.tr("providers.youtube")}),
       "description": query,
       "icon": "search",
       "isTablerIcon": true,
@@ -1812,7 +1830,10 @@ Item {
     return {
       "id": entry?.id || "tag-editor",
       "name": pluginApi?.tr("tags.manage"),
-      "description": (entry?.title || tagEditorEntryTitle || pluginApi?.tr("common.untitled")) + " • " + countLabel,
+      "description": pluginApi?.tr("tags.headerDescription", {
+                                     "title": entry?.title || tagEditorEntryTitle || pluginApi?.tr("common.untitled"),
+                                     "count": countLabel
+                                   }),
       "icon": "tag",
       "isTablerIcon": true,
       "isImage": false,
@@ -1845,7 +1866,7 @@ Item {
     return {
       "id": (entry?.id || "tag") + ":" + normalizedTag.toLowerCase() + ":" + (assigned ? "remove" : "add"),
       "name": assigned ? (pluginApi?.tr("tags.remove", {"tag": normalizedTag})) : (pluginApi?.tr("tags.add", {"tag": normalizedTag})),
-      "description": assigned ? (pluginApi?.tr("tags.removeFrom", {"title": entry?.title || tagEditorEntryTitle || "this track"})) : (pluginApi?.tr("tags.applyTo", {"title": entry?.title || tagEditorEntryTitle || "this track"})),
+      "description": assigned ? (pluginApi?.tr("tags.removeFrom", {"title": entry?.title || tagEditorEntryTitle || pluginApi?.tr("common.untitled")})) : (pluginApi?.tr("tags.applyTo", {"title": entry?.title || tagEditorEntryTitle || pluginApi?.tr("common.untitled")})),
       "icon": assigned ? "x" : "tag",
       "isTablerIcon": true,
       "isImage": false,
@@ -1947,7 +1968,10 @@ Item {
     return {
       "id": entry?.id || "metadata-editor",
       "name": pluginApi?.tr("metadata.fieldEditor", {"field": label}),
-      "description": (entry?.title || metadataEditorEntryTitle || (pluginApi?.tr("common.untitled"))) + (currentValue.length > 0 ? (" • " + currentValue) : (" • " + (pluginApi?.tr("metadata.currentlyEmpty")))),
+      "description": pluginApi?.tr("metadata.headerDescription", {
+                                     "title": entry?.title || metadataEditorEntryTitle || (pluginApi?.tr("common.untitled")),
+                                     "value": currentValue.length > 0 ? currentValue : (pluginApi?.tr("metadata.currentlyEmpty"))
+                                   }),
       "icon": "pencil",
       "isTablerIcon": true,
       "isImage": false,
@@ -2051,7 +2075,7 @@ Item {
 
     if (field.length === 0) {
       return [
-            buildMetadataEditorHintItem(pluginApi?.tr("metadata.chooseField", {"title": entry?.title || metadataEditorEntryTitle || "this track"})),
+            buildMetadataEditorHintItem(pluginApi?.tr("metadata.chooseField", {"title": entry?.title || metadataEditorEntryTitle || pluginApi?.tr("common.untitled")})),
             buildMetadataFieldItem(entry, "title"),
             buildMetadataFieldItem(entry, "artist"),
             buildMetadataFieldItem(entry, "album")
@@ -2146,7 +2170,10 @@ Item {
     var sourceFolder = (playlist.sourceFolder || "").trim();
     var description = entryCount === 1 ? (pluginApi?.tr("playlists.oneTrack")) : (pluginApi?.tr("playlists.trackCount", {"count": entryCount}));
     if (sourceType === "folder" && sourceFolder.length > 0) {
-      description += " • " + (pluginApi?.tr("playlists.syncedFolder"));
+      description = pluginApi?.tr("playlists.syncedFolderDescription", {
+                                    "count": description,
+                                    "source": pluginApi?.tr("playlists.syncedFolder")
+                                  });
     }
 
     return {
@@ -2285,7 +2312,7 @@ Item {
     var items = [buildPlaylistRenameHeaderItem(playlist)];
     var targetName = (playlistQuery || "").trim();
     if (targetName.length === 0) {
-      items.push(buildPlaylistRenameHintItem(pluginApi?.tr("playlists.typeNewName", {"name": playlist.name || playlistRenameTitle || "this playlist"})));
+      items.push(buildPlaylistRenameHintItem(pluginApi?.tr("playlists.typeNewName", {"name": playlist.name || playlistRenameTitle || pluginApi?.tr("playlists.untitled")})));
       return items;
     }
 
@@ -2393,7 +2420,7 @@ Item {
     return {
       "id": entry.id || "",
       "name": entry.title || pluginApi?.tr("common.untitled"),
-      "description": buildDescription(entry, mainInstance?.providerLabel(entryProvider) || "YouTube"),
+      "description": buildDescription(entry, mainInstance?.providerLabel(entryProvider) || pluginApi?.tr("providers.youtube")),
       "icon": "music",
       "isTablerIcon": true,
       "isImage": false,
@@ -2433,7 +2460,7 @@ Item {
       return [
             {
               "icon": "player-play",
-              "tooltip": "Play now",
+              "tooltip": pluginApi?.tr("tooltip.playNow"),
               "action": function () {
                 mainInstance?.playQueueEntryNow(item);
                 if (launcher) {
@@ -2443,7 +2470,7 @@ Item {
             },
             {
               "icon": "x",
-              "tooltip": "Remove from queue",
+              "tooltip": pluginApi?.tr("tooltip.removeFromQueue"),
               "action": function () {
                 mainInstance?.removeQueueEntry(item.id, true);
               }
@@ -2455,14 +2482,14 @@ Item {
       return [
             {
               "icon": "arrows-sort",
-              "tooltip": pluginApi?.tr("tooltip.sort", {"sort": mainInstance?.sortLabel() || "Date"}),
+              "tooltip": pluginApi?.tr("tooltip.sort", {"sort": mainInstance?.sortLabel() || pluginApi?.tr("sort.date")}),
               "action": function () {
                 mainInstance?.cycleSortBy();
               }
             },
             {
               "icon": "switch-horizontal",
-              "tooltip": pluginApi?.tr("tooltip.switchProvider", {"provider": mainInstance?.providerLabel() || "YouTube"}),
+              "tooltip": pluginApi?.tr("tooltip.switchProvider", {"provider": mainInstance?.providerLabel() || pluginApi?.tr("providers.youtube")}),
               "action": function () {
                 mainInstance?.cycleProvider();
               }
@@ -2554,7 +2581,7 @@ Item {
 
       statusActions.push({
                            "icon": "switch-horizontal",
-                           "tooltip": pluginApi?.tr("tooltip.switchProvider", {"provider": mainInstance?.providerLabel() || "YouTube"}),
+                           "tooltip": pluginApi?.tr("tooltip.switchProvider", {"provider": mainInstance?.providerLabel() || pluginApi?.tr("providers.youtube")}),
                            "action": function () {
                              mainInstance?.cycleProvider();
                            }
@@ -2651,10 +2678,11 @@ Item {
     }
 
     if (item.kind === "library") {
+      var ratingLabel = (item.rating || 0) > 0 ? formatRating(item.rating || 0) : pluginApi?.tr("tooltip.unrated");
       var libraryActions = [
             {
               "icon": "star",
-              "tooltip": pluginApi?.tr("tooltip.rate", {"rating": formatRating(item.rating || 0) + (item.rating ? "" : "unrated")}),
+              "tooltip": pluginApi?.tr("tooltip.rate", {"rating": ratingLabel}),
               "action": function () {
                 mainInstance?.cycleRating(item.id);
               }

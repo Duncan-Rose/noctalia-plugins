@@ -58,6 +58,7 @@ _play_track_state_phase() {
   local url="$3"
   local uploader="$4"
   local duration="$5"
+  local desired_speed="1"
 
   local playback_source="$url"
   local youtube_video_id=""
@@ -73,6 +74,8 @@ _play_track_state_phase() {
   fi
 
   require_cmd mpv
+
+  desired_speed="$(current_state_speed)"
 
   _stop_existing_unlocked >/dev/null 2>&1 || true
 
@@ -90,6 +93,7 @@ _play_track_state_phase() {
         --force-window=no
         --audio-display=no
         --demuxer-max-bytes=256K
+        --speed="$desired_speed"
         --log-file="$LOG_FILE"
         --input-ipc-server="$SOCKET_FILE"
         --title="Noctalia music-search"
@@ -99,17 +103,17 @@ _play_track_state_phase() {
       nohup setsid "${mpv_args[@]}" >/dev/null 2>&1 &
     else
       if ! command -v yt-dlp >/dev/null 2>&1; then
-        _write_state_unlocked false "$entry_id" "$title" "$url" "$uploader" "$duration" 1 0 "yt-dlp is required for YouTube playback." "error"
+        _write_state_unlocked false "$entry_id" "$title" "$url" "$uploader" "$duration" "$desired_speed" 0 "yt-dlp is required for YouTube playback." "error"
         _emit_state_unlocked
         exit 1
       fi
 
-      launch_youtube_stream "$url"
+      launch_youtube_stream "$url" "$desired_speed"
       pid="$!"
       printf '%s\n' "$pid" > "$PID_FILE"
 
       if wait_for_audio_start "$pid" 24; then
-        _write_state_unlocked true "$entry_id" "$title" "$url" "$uploader" "$duration" 1 "$pid" "" ""
+        _write_state_unlocked true "$entry_id" "$title" "$url" "$uploader" "$duration" "$desired_speed" "$pid" "" ""
         _emit_state_unlocked
         return 0
       fi
@@ -128,7 +132,7 @@ _play_track_state_phase() {
       cleanup_runtime_cache
       : > "$LOG_FILE"
 
-      launch_youtube_cached "$url"
+      launch_youtube_cached "$url" "$desired_speed"
     fi
   else
     mpv_args=(
@@ -138,6 +142,7 @@ _play_track_state_phase() {
       --audio-display=no
       --ytdl-format="bestaudio/best"
       --demuxer-max-bytes=256K
+      --speed="$desired_speed"
       --log-file="$LOG_FILE"
       --input-ipc-server="$SOCKET_FILE"
       --title="Noctalia music-search"
@@ -152,7 +157,7 @@ _play_track_state_phase() {
   sleep 1.5
 
   if is_running_pid "$pid"; then
-    _write_state_unlocked true "$entry_id" "$title" "$url" "$uploader" "$duration" 1 "$pid" "" ""
+    _write_state_unlocked true "$entry_id" "$title" "$url" "$uploader" "$duration" "$desired_speed" "$pid" "" ""
     _emit_state_unlocked
     return 0
   fi
@@ -163,7 +168,7 @@ _play_track_state_phase() {
   fi
 
   rm -f "$PID_FILE"
-  _write_state_unlocked false "$entry_id" "$title" "$url" "$uploader" "$duration" 1 0 "${error:-$([[ "$stream_result" -eq 2 ]] && printf 'Streaming did not start in time, and cached fallback failed.' || printf 'Track failed to start.')}" "error"
+  _write_state_unlocked false "$entry_id" "$title" "$url" "$uploader" "$duration" "$desired_speed" 0 "${error:-$([[ "$stream_result" -eq 2 ]] && printf 'Streaming did not start in time, and cached fallback failed.' || printf 'Track failed to start.')}" "error"
   _emit_state_unlocked
   exit 1
 }

@@ -42,6 +42,10 @@ Item {
 
   implicitHeight: Math.min(previewContent.implicitHeight + (Style.marginS * 2), maxPreviewHeight)
 
+  function previewTr(key, params) {
+    return detailCacheOwner?.pluginApi?.tr(key, params) ?? "";
+  }
+
   function detailCache() {
     return detailCacheOwner?.previewDetailCache || ({});
   }
@@ -124,7 +128,7 @@ Item {
     if (!isItemStartingNow(currentItem)) {
       return "";
     }
-    return mainInstance?.playbackStartingMessage || detailCacheOwner?.pluginApi?.tr("status.startingPlayback");
+    return mainInstance?.playbackStartingMessage || previewTr("status.startingPlayback");
   }
 
   function richMetadataAllowedForItem(item) {
@@ -166,24 +170,24 @@ Item {
   }
 
   function formatViews(count) {
-    var total = Number(count || 0);
+    var total = count || 0;
     if (!isFinite(total) || total <= 0) {
       return "";
     }
     if (total >= 1000000000) {
-      return (total / 1000000000).toFixed(1).replace(/\.0$/, "") + "B views";
+      return previewTr("preview.viewCountB", {"count": (total / 1000000000).toFixed(1).replace(/\.0$/, "")});
     }
     if (total >= 1000000) {
-      return (total / 1000000).toFixed(1).replace(/\.0$/, "") + "M views";
+      return previewTr("preview.viewCountM", {"count": (total / 1000000).toFixed(1).replace(/\.0$/, "")});
     }
     if (total >= 1000) {
-      return (total / 1000).toFixed(1).replace(/\.0$/, "") + "K views";
+      return previewTr("preview.viewCountK", {"count": (total / 1000).toFixed(1).replace(/\.0$/, "")});
     }
-    return total + " views";
+    return previewTr("preview.viewCount", {"count": total});
   }
 
   function formatUploadDate(rawDate) {
-    var text = String(rawDate || "").trim();
+    var text = (rawDate || "").trim();
     if (text.length !== 8) {
       return "";
     }
@@ -191,16 +195,16 @@ Item {
   }
 
   function formatSpeed(value) {
-    var speed = Number(value || 1);
+    var speed = value ?? 1;
     if (!isFinite(speed) || speed <= 0) {
       speed = 1;
     }
-    return speed.toFixed(2) + "x";
+    return previewTr("speed.multiplier", {"speed": speed.toFixed(2)});
   }
 
   function effectiveTitle() {
     var visibleDetailData = richMetadataAllowedForItem(currentItem) ? detailData : null;
-    return visibleDetailData?.title || currentItem?.name || currentItem?.title || detailCacheOwner?.pluginApi?.tr("common.untitled");
+    return visibleDetailData?.title || currentItem?.name || currentItem?.title || previewTr("common.untitled");
   }
 
   function effectiveUploader() {
@@ -247,7 +251,7 @@ Item {
 
     var mainInstance = detailCacheOwner?.mainInstance || null;
     if (isItemPlayingNow(currentItem) && mainInstance) {
-      var nextPosition = Number(mainInstance.currentPosition || 0);
+      var nextPosition = mainInstance.currentPosition ?? 0;
       livePosition = isFinite(nextPosition) && nextPosition >= 0 ? nextPosition : 0;
       return;
     }
@@ -258,8 +262,8 @@ Item {
   }
 
   function requestSeekForRatio(ratio) {
-    var duration = Number(effectiveDuration() || 0);
-    var nextRatio = Number(ratio);
+    var duration = effectiveDuration() || 0;
+    var nextRatio = ratio;
     if (!isFinite(duration) || duration <= 0 || !isFinite(nextRatio)) {
       return;
     }
@@ -386,12 +390,12 @@ Item {
           previewError = "";
         } catch (error) {
           detailData = null;
-          previewError = detailCacheOwner?.pluginApi?.tr("preview.metadataParseError");
+          previewError = previewTr("preview.metadataParseError");
         }
       } else {
         var fallback = previewPanel.currentItem?.url ? previewPanel.detailCache()[previewPanel.currentItem.url] : null;
         detailData = fallback || null;
-        previewError = fallback ? "" : (String(detailsProcess.stderr.text || "").trim() || detailCacheOwner?.pluginApi?.tr("preview.metadataUnavailable"));
+        previewError = fallback ? "" : (String(detailsProcess.stderr.text || "").trim() || previewTr("preview.metadataUnavailable"));
       }
     }
   }
@@ -442,21 +446,21 @@ Item {
             }
             if (currentItem?.isSaved) {
               chips.push({
-                           "label": detailCacheOwner?.pluginApi?.tr("preview.chipSaved"),
+                           "label": previewTr("preview.chipSaved"),
                            "clickable": true,
                            "query": (detailCacheOwner?.commandName || ">music-search") + " saved:"
                          });
             }
             if (isItemStartingNow(currentItem)) {
               chips.push({
-                           "label": detailCacheOwner?.pluginApi?.tr("preview.chipStarting"),
+                           "label": previewTr("preview.chipStarting"),
                            "clickable": false,
                            "query": ""
                          });
             }
             var tags = currentItem?.tags || [];
             for (var i = 0; i < tags.length; i++) {
-              var tag = String(tags[i] || "").trim();
+              var tag = (tags[i] || "").trim();
               if (tag.length > 0) {
                 chips.push({
                              "label": "#" + tag,
@@ -587,13 +591,13 @@ Item {
         property real lastSentSeekRatio: -1
         property real seekEpsilon: 0.01
         property real progressRatio: {
-          var duration = Number(effectiveDuration() || 0);
+          var duration = effectiveDuration() || 0;
           if (!isFinite(duration) || duration <= 0) {
             return 0;
           }
           var activePosition = previewPanel.seekDragging && localSeekRatio >= 0
               ? (localSeekRatio * duration)
-              : Number(previewPanel.livePosition || 0);
+              : (previewPanel.livePosition || 0);
           var ratio = activePosition / duration;
           if (!isFinite(ratio)) {
             return 0;
@@ -632,7 +636,7 @@ Item {
 
           onMoved: {
             progressWrapper.localSeekRatio = value;
-            previewPanel.livePosition = value * Number(previewPanel.effectiveDuration() || 0);
+            previewPanel.livePosition = value * (previewPanel.effectiveDuration() || 0);
             seekDebounce.restart();
           }
           onPressedChanged: {
@@ -689,7 +693,7 @@ Item {
 
         NText {
           visible: showDurationMetadata
-          text: visible ? (detailCacheOwner?.pluginApi?.tr("preview.length")) : ""
+          text: visible ? previewTr("preview.length") : ""
           pointSize: Style.fontSizeS
           color: Color.mOnSurfaceVariant
         }
@@ -704,7 +708,7 @@ Item {
 
         NText {
           visible: showAlbumMetadata && effectiveAlbum() !== ""
-          text: visible ? (detailCacheOwner?.pluginApi?.tr("preview.album")) : ""
+          text: visible ? previewTr("preview.album") : ""
           pointSize: Style.fontSizeS
           color: Color.mOnSurfaceVariant
         }
@@ -718,14 +722,14 @@ Item {
         }
 
         NText {
-          visible: showPlayStatsMetadata && Number(currentItem?.playCount || 0) > 0
-          text: visible ? (detailCacheOwner?.pluginApi?.tr("preview.plays")) : ""
+          visible: showPlayStatsMetadata && (currentItem?.playCount || 0) > 0
+          text: visible ? previewTr("preview.plays") : ""
           pointSize: Style.fontSizeS
           color: Color.mOnSurfaceVariant
         }
         NText {
-          visible: showPlayStatsMetadata && Number(currentItem?.playCount || 0) > 0
-          text: Number(currentItem?.playCount || 0)
+          visible: showPlayStatsMetadata && (currentItem?.playCount || 0) > 0
+          text: currentItem?.playCount || 0
           pointSize: Style.fontSizeS
           color: Color.mOnSurface
           horizontalAlignment: Text.AlignRight
@@ -734,7 +738,7 @@ Item {
 
         NText {
           visible: showPlayStatsMetadata && MusicUtils.formatRelativeTime(currentItem?.lastPlayedAt) !== ""
-          text: visible ? (detailCacheOwner?.pluginApi?.tr("preview.lastPlayed")) : ""
+          text: visible ? previewTr("preview.lastPlayed") : ""
           pointSize: Style.fontSizeS
           color: Color.mOnSurfaceVariant
         }
@@ -749,7 +753,7 @@ Item {
 
         NText {
           visible: previewPanel.richMetadataAllowedForItem(previewPanel.currentItem) && formatUploadDate(detailData?.uploadDate) !== ""
-          text: visible ? (detailCacheOwner?.pluginApi?.tr("preview.uploaded")) : ""
+          text: visible ? previewTr("preview.uploaded") : ""
           pointSize: Style.fontSizeS
           color: Color.mOnSurfaceVariant
         }
@@ -764,7 +768,7 @@ Item {
 
         NText {
           visible: previewPanel.richMetadataAllowedForItem(previewPanel.currentItem) && formatViews(detailData?.viewCount) !== ""
-          text: visible ? (detailCacheOwner?.pluginApi?.tr("preview.reach")) : ""
+          text: visible ? previewTr("preview.reach") : ""
           pointSize: Style.fontSizeS
           color: Color.mOnSurfaceVariant
         }
@@ -779,7 +783,7 @@ Item {
 
         NText {
           visible: showStatusMetadata && previewPanel.richMetadataAllowedForItem(previewPanel.currentItem) && !!detailData?.availability
-          text: visible ? (detailCacheOwner?.pluginApi?.tr("preview.status")) : ""
+          text: visible ? previewTr("preview.status") : ""
           pointSize: Style.fontSizeS
           color: Color.mOnSurfaceVariant
         }
@@ -811,7 +815,7 @@ Item {
               if (previewError)
                 return previewError;
               if (currentItem?.lastError)
-                return detailCacheOwner?.pluginApi?.tr("preview.lastPlaybackError", {"error": currentItem.lastError});
+                return previewTr("preview.lastPlaybackError", {"error": currentItem.lastError});
               return effectiveDescription();
             }
             pointSize: Style.fontSizeS
@@ -820,7 +824,7 @@ Item {
 
           NButton {
             visible: !previewError && !currentItem?.lastError && descriptionNeedsExpansion()
-            text: previewPanel.descriptionExpanded ? (detailCacheOwner?.pluginApi?.tr("preview.readLess")) : (detailCacheOwner?.pluginApi?.tr("preview.readMore"))
+            text: previewPanel.descriptionExpanded ? previewTr("preview.readLess") : previewTr("preview.readMore")
             backgroundColor: "transparent"
             outlined: false
             textColor: Color.mPrimary
@@ -869,7 +873,7 @@ Item {
         }
 
         NText {
-          text: detailCacheOwner?.pluginApi?.tr("preview.loadingMetadata")
+          text: previewTr("preview.loadingMetadata")
           pointSize: Style.fontSizeS
           color: Color.mOnSurfaceVariant
         }

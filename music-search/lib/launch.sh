@@ -3,6 +3,7 @@
 
 launch_youtube_stream() {
   local source_url="$1"
+  local speed="${2-1}"
   local -a mpv_cmd=(
     mpv
     --no-video
@@ -10,6 +11,7 @@ launch_youtube_stream() {
     --audio-display=no
     --ytdl-format=bestaudio/best
     --demuxer-max-bytes=256K
+    --speed="$speed"
     --log-file="$LOG_FILE"
     --input-ipc-server="$SOCKET_FILE"
     --title="Noctalia music-search"
@@ -24,6 +26,7 @@ launch_youtube_stream() {
 
 launch_youtube_cached() {
   local source_url="$1"
+  local speed="${2-1}"
   local extractor_arg
   extractor_arg="$(yt_extractor_args)"
 
@@ -38,8 +41,8 @@ launch_youtube_cached() {
     if [[ ${#files[@]} -eq 0 ]]; then
       exit 1
     fi
-    exec mpv --no-video --force-window=no --audio-display=no --demuxer-max-bytes=256K --log-file="$4" --input-ipc-server="$3" --title="Noctalia music-search" "${files[0]}"
-  ' _ "$source_url" "$DOWNLOAD_BASENAME" "$SOCKET_FILE" "$LOG_FILE" "$extractor_arg" >/dev/null 2>&1 &
+    exec mpv --no-video --force-window=no --audio-display=no --demuxer-max-bytes=256K --speed="$6" --log-file="$4" --input-ipc-server="$3" --title="Noctalia music-search" "${files[0]}"
+  ' _ "$source_url" "$DOWNLOAD_BASENAME" "$SOCKET_FILE" "$LOG_FILE" "$extractor_arg" "$speed" >/dev/null 2>&1 &
 }
 
 wait_for_audio_start() {

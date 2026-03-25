@@ -46,7 +46,7 @@ _current_status_commit_unlocked() {
       "$(state_field '.url')" \
       "$(state_field '.uploader')" \
       "$(state_field '.duration')" \
-      1 \
+      "$(current_state_speed)" \
       0 \
       "" \
       "$next_end_reason" \

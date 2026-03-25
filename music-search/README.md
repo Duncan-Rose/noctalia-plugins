@@ -2,6 +2,12 @@
 
 Search YouTube, SoundCloud, or local files, play audio in the background with `mpv`, and manage a saved library with playlists, tags, ratings, preview metadata, and a built-in queue.
 
+## Bar and panel usage
+
+- Add the Music Search bar widget to open a dedicated panel in one click
+- The panel exposes search, playback controls, saved tracks, and queue management without going through the launcher
+- The launcher provider still exposes the full command surface when you want advanced flows like `playlist:`, `tag:`, or `edit:`
+
 ## Requirements
 
 - `mpv` for playback
@@ -32,6 +38,7 @@ The internal plugin ID remains `music` for IPC compatibility.
 
 ```bash
 qs -c noctalia-shell ipc call plugin:music launcher
+qs -c noctalia-shell ipc call plugin:music panel
 qs -c noctalia-shell ipc call plugin:music play "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 qs -c noctalia-shell ipc call plugin:music save "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 qs -c noctalia-shell ipc call plugin:music seek 90

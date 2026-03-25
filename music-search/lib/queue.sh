@@ -16,6 +16,7 @@ _queue_enqueue_unlocked() {
   local url="${3-}"
   local uploader="${4-}"
   local duration="${5-0}"
+  local is_saved="${6-true}"
   require_cmd jq
 
   if [[ -z "$url" ]]; then
@@ -38,6 +39,7 @@ _queue_enqueue_unlocked() {
     --arg url "$url" \
     --arg uploader "$uploader" \
     --argjson duration "${duration:-0}" \
+    --argjson isSaved "${is_saved:-true}" \
     --arg queuedAt "$(date -Iseconds)" \
     'map(select(.id != $id and .url != $url)) + [{
       id: $id,
@@ -45,6 +47,7 @@ _queue_enqueue_unlocked() {
       url: $url,
       uploader: $uploader,
       duration: $duration,
+      isSaved: $isSaved,
       queuedAt: $queuedAt
     }]' "$QUEUE_FILE" | json_write_raw "$QUEUE_FILE"
 
@@ -102,7 +105,7 @@ _queue_load_library_unlocked() {
       empty
     else
       .[]
-      | select((.isSaved // true) != false)
+      | select(if .isSaved == null then true else .isSaved end)
       | select((.url // "") != "")
       | {
           id: (.id // .url // ""),
@@ -110,6 +113,7 @@ _queue_load_library_unlocked() {
           url: (.url // ""),
           uploader: (.uploader // ""),
           duration: (.duration // 0),
+          isSaved: true,
           queuedAt: (.queuedAt // $queuedAt)
         }
     end

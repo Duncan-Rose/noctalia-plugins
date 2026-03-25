@@ -117,6 +117,8 @@
   },
   "queue": {
     "title": "Queue",
+    "nextUp": "Next up",
+    "queued": "Queued",
     "active": "Queue is active and waiting for the next finish.",
     "idle": "Queue is idle.",
     "start": "Start queue",
@@ -138,13 +140,29 @@
     "autoplaySavedShuffleDesc": "Shuffle the saved library into queue and start playing it.",
     "autoplaySavedShuffleActiveDesc": "Shuffle your saved music library into the active queue.",
     "empty": "Queue is empty",
-    "emptyDesc": "Use save, playlists, or inline queue actions to add tracks."
+    "emptyDesc": "Use save, playlists, or inline queue actions to add tracks.",
+    "removed": "Removed queued track.",
+    "cleared": "Queue cleared.",
+    "playingSaved": "Playing saved tracks.",
+    "playingShuffledSaved": "Playing shuffled saved tracks.",
+    "savedEmpty": "Saved library is empty.",
+    "loaded": "Queue loaded.",
+    "loadedEmpty": "Queue is empty.",
+    "armed": "Queue armed. It will start after the current song finishes.",
+    "stopped": "Queue stopped.",
+    "noNext": "No next queued track.",
+    "loadingSaved": "Loading saved tracks into queue...",
+    "loadingShuffledSaved": "Loading saved tracks into shuffled queue...",
+    "nowPlaying": "Queued playback: {title}",
+    "errorExhausted": "Queue ran out after a playback error.",
+    "finished": "Queue finished."
   },
   "speed": {
     "title": "Playback Speed",
     "setTo": "Set speed to {speed}",
     "desc": "Adjust current playback speed.",
     "current": "Current: {speed}",
+    "multiplier": "{speed}x",
     "noPlayback": "Start playback first, then use `speed:1.05` or the preview buttons.",
     "useNumber": "Use a number like `speed:1.05`."
   },
@@ -159,6 +177,7 @@
     "noTags": "No tags yet",
     "oneTag": "1 tag",
     "tagCount": "{count} tags",
+    "headerDescription": "{title} • {count}",
     "editor": "Tag editor",
     "chooseTrack": "Choose a saved track first, then use the tag action to edit its tags.",
     "add": "Add #{tag}",
@@ -176,6 +195,7 @@
     "edit": "Edit metadata",
     "chooseTrack": "Choose a library track first, then use the edit action to update title, artist, or album.",
     "fieldEditor": "{field} editor",
+    "headerDescription": "{title} • {value}",
     "currentlyEmpty": "currently empty",
     "editField": "Edit {field}",
     "empty": "Currently empty",
@@ -193,6 +213,7 @@
     "oneTrack": "1 track",
     "trackCount": "{count} tracks",
     "syncedFolder": "synced folder",
+    "syncedFolderDescription": "{count} • {source}",
     "rename": "Rename playlist",
     "renameTitle": "Playlist rename",
     "typeNewName": "Type a new name for \"{name}\".",
@@ -220,8 +241,61 @@
     "saveUrlMp3": "Save URL as mp3",
     "downloadDesc": "Download to ~/Music/Noctalia"
   },
+  "bar_widget": {
+    "tooltipIdle": "Open music panel",
+    "tooltipPlaying": "Open music panel\nNow playing: {title}",
+    "settings": "Widget settings"
+  },
+  "panel": {
+    "title": "Music panel",
+    "subtitle": "Search, queue, and control playback without opening the launcher.",
+    "openLauncher": "Launcher",
+    "openSettings": "Settings",
+    "close": "Close",
+    "search": "Search",
+    "library": "Saved",
+    "queue": "Queue",
+    "searchPlaceholder": "Search music, paste a URL, or use yt:/sc:/local:",
+    "libraryPlaceholder": "Filter saved tracks",
+    "searchHint": "Search {provider}, paste a URL, or switch to Saved and Queue tabs.",
+    "typeMore": "Type at least 2 characters to search {provider}.",
+    "searching": "Searching {provider}...",
+    "noSearchResults": "No results for \"{query}\".",
+    "playUrl": "Play URL",
+    "saveUrl": "Save URL",
+    "queueUrl": "Queue URL",
+    "playSaved": "Play saved",
+    "shuffleSaved": "Shuffle saved",
+    "startQueue": "Start queue",
+    "skipQueue": "Skip",
+    "clearQueue": "Clear",
+    "pause": "Pause",
+    "resume": "Resume",
+    "stop": "Stop",
+    "speed": "Speed",
+    "saveCurrent": "Save track",
+    "saveCurrentMp3": "Save mp3",
+    "refresh": "Refresh",
+    "nowPlaying": "Now playing",
+    "nothingPlaying": "Nothing playing right now.",
+    "savedCount": "{count} saved tracks",
+    "queueCount": "{count} queued tracks",
+    "recentTracks": "Recent saved tracks",
+    "queued": "Queued",
+    "queuedAt": "Queued {time}",
+    "emptyLibrary": "No saved tracks yet.",
+    "emptyQueue": "Queue is empty.",
+    "savedLabel": "Saved",
+    "playAction": "Play",
+    "queueAction": "Queue",
+    "saveAction": "Save",
+    "downloadAction": "MP3",
+    "removeAction": "Remove",
+    "helperHint": "The full command surface is still available in the launcher via >music-search."
+  },
   "tooltip": {
     "addToQueue": "Add to queue",
+    "playNow": "Play now",
     "saveToLibrary": "Save to library",
     "saveMp3Current": "Save current track as mp3",
     "resume": "Resume",
@@ -243,7 +317,9 @@
     "renamePlaylist": "Rename playlist",
     "deletePlaylist": "Delete playlist",
     "syncFolder": "Sync folder playlist",
-    "removeFromPlaylist": "Remove from playlist"
+    "removeFromPlaylist": "Remove from playlist",
+    "removeFromQueue": "Remove from queue",
+    "unrated": "unrated"
   },
   "artists": {
     "noArtists": "Save tracks with uploader metadata to browse artists here.",
@@ -265,7 +341,10 @@
     "loadingMetadata": "Loading richer metadata...",
     "metadataParseError": "Metadata preview could not be parsed.",
     "metadataUnavailable": "Metadata preview unavailable.",
-    "viewCount": "{count} views"
+    "viewCount": "{count} views",
+    "viewCountB": "{count}B views",
+    "viewCountM": "{count}M views",
+    "viewCountK": "{count}K views"
   },
   "settings": {
     "provider": {
@@ -298,6 +377,13 @@
     "autoSave": {
       "label": "Save remote tracks as mp3 after playback starts",
       "desc": "After a YouTube or SoundCloud track successfully starts playing, also save an mp3 copy into the current download folder."
+    },
+    "bar": {
+      "title": "Bar Widget",
+      "hoverTitle": {
+        "label": "Show track title on hover",
+        "desc": "Expand the bar widget on hover to show and scroll the current track title."
+      }
     },
     "home": {
       "title": "Home",
