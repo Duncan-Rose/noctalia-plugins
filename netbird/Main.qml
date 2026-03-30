@@ -115,6 +115,13 @@ Item {
     }
 
     function detectTerminal() {
+        var manualTerm = pluginApi?.pluginSettings?.terminalCommand || "";
+        if (manualTerm !== "") {
+            root.detectedTerminal = manualTerm;
+            Logger.i("NetBird", "Using user-defined terminal: " + root.detectedTerminal);
+            return;
+        }
+
         root.terminalCheckIndex = 0;
         root.detectedTerminal = "";
         if (root.terminalCandidates.length > 0) {

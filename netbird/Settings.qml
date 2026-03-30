@@ -21,6 +21,8 @@ ColumnLayout {
 
     property int editPingCount: pluginApi?.pluginSettings?.pingCount || pluginApi?.manifest?.metadata?.defaultSettings?.pingCount || 5
 
+    property string editTerminalCommand: pluginApi?.pluginSettings?.terminalCommand || pluginApi?.manifest?.metadata?.defaultSettings?.terminalCommand || ""
+
     property string editDefaultPeerAction: pluginApi?.pluginSettings?.defaultPeerAction || pluginApi?.manifest?.metadata?.defaultSettings?.defaultPeerAction || "copy-ip"
 
     spacing: Style.marginM
@@ -128,26 +130,20 @@ ColumnLayout {
         Layout.bottomMargin: Style.marginM
     }
 
-    NLabel {
-        label: pluginApi?.tr("settings.terminal") || "Terminal Configuration"
-    }
-
-    NText {
+    NTextInput {
         Layout.fillWidth: true
-        text: {
+        label: pluginApi?.tr("settings.terminal") || "Terminal Configuration"
+        description: pluginApi?.tr("settings.terminal-desc") || "Set a custom terminal command or leave blank for auto-detection"
+        placeholderText: {
             var detected = pluginApi?.mainInstance?.detectedTerminal || "";
             if (detected !== "") {
-                return (pluginApi?.tr("settings.terminal-detected") || "Auto-detected terminal") + ": " + detected;
+                return (pluginApi?.tr("settings.terminal-detected") || "Auto-detected") + ": " + detected;
             } else {
                 return pluginApi?.tr("settings.terminal-none") || "No terminal emulator detected";
             }
         }
-        color: {
-            var detected = pluginApi?.mainInstance?.detectedTerminal || "";
-            return detected !== "" ? Color.mPrimary : Color.mError;
-        }
-        pointSize: Style.fontSizeS
-        wrapMode: Text.Wrap
+        text: root.editTerminalCommand
+        onTextChanged: root.editTerminalCommand = text
     }
 
     NLabel {
@@ -209,6 +205,7 @@ ColumnLayout {
         pluginApi.pluginSettings.showIpAddress = root.editShowIpAddress;
         pluginApi.pluginSettings.hideDisconnected = root.editHideDisconnected;
         pluginApi.pluginSettings.showPing = root.editShowPing;
+        pluginApi.pluginSettings.terminalCommand = root.editTerminalCommand;
         pluginApi.pluginSettings.pingCount = root.editPingCount;
         pluginApi.pluginSettings.defaultPeerAction = root.editDefaultPeerAction;
 

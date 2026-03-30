@@ -69,11 +69,25 @@ Item {
         }
     }
 
+    function buildTerminalCmd(args) {
+        var term = root.terminalCommand.toLowerCase();
+        var flag = "-e";
+        // Ptyxis, GNOME Terminal, and WezTerm prefer `--` instead of `-e` to execute a command
+        if (term.indexOf("ptyxis") !== -1 || term.indexOf("gnome-terminal") !== -1 || term.indexOf("wezterm") !== -1) {
+            flag = "--";
+        }
+        var cmd = [root.terminalCommand, flag];
+        for (var i = 0; i < args.length; i++) {
+            cmd.push(args[i]);
+        }
+        return cmd;
+    }
+
     function sshToSelectedPeer() {
         if (!requireTerminal())
             return;
         if (selectedPeer && selectedPeer.netbirdIp) {
-            Quickshell.execDetached([root.terminalCommand, "-e", "ssh", selectedPeer.netbirdIp]);
+            Quickshell.execDetached(buildTerminalCmd(["ssh", selectedPeer.netbirdIp]));
         }
     }
 
@@ -81,7 +95,7 @@ Item {
         if (!requireTerminal())
             return;
         if (selectedPeer && selectedPeer.netbirdIp) {
-            Quickshell.execDetached([root.terminalCommand, "-e", "ping", "-c", root.pingCount.toString(), selectedPeer.netbirdIp]);
+            Quickshell.execDetached(buildTerminalCmd(["ping", "-c", root.pingCount.toString(), selectedPeer.netbirdIp]));
         }
     }
 
@@ -146,7 +160,7 @@ Item {
 
     readonly property bool hideDisconnected: pluginApi?.pluginSettings?.hideDisconnected ?? pluginApi?.manifest?.metadata?.defaultSettings?.hideDisconnected ?? false
 
-    readonly property string terminalCommand: mainInstance?.detectedTerminal || ""
+    readonly property string terminalCommand: pluginApi?.pluginSettings?.terminalCommand || pluginApi?.manifest?.metadata?.defaultSettings?.terminalCommand || mainInstance?.detectedTerminal || ""
 
     readonly property int pingCount: pluginApi?.pluginSettings?.pingCount || pluginApi?.manifest?.metadata?.defaultSettings?.pingCount || 5
 
