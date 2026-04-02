@@ -17,6 +17,25 @@
       "lastUpdated": "2026-02-04T23:08:01-07:00"
     },
     {
+      "id": "arch-updater",
+      "name": "Arch Updater",
+      "version": "1.0.0",
+      "official": false,
+      "author": "Ast",
+      "description": "A plugin to manage updates on Arch",
+      "repository": "https://github.com/noctalia-dev/noctalia-plugins",
+      "minNoctaliaVersion": "3.6.0",
+      "license": "MIT",
+      "tags": [
+        "Bar",
+        "Desktop",
+        "Panel",
+        "System",
+        "Utility"
+      ],
+      "lastUpdated": "2026-03-31T22:59:40+01:00"
+    },
+    {
       "id": "assistant-panel",
       "name": "Assistant Panel",
       "version": "2.1.6",
