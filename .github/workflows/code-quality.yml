@@ -279,6 +279,10 @@ jobs:
                   print_line "$l_priority" "$line_index" 'When it comes to translations there is no need for fallback values. From: `pluginApi?.tr("example") || "value"`. To: `pluginApi?.tr("example")`' "$line"
                   issues=$((issues + 1))
                 fi
+                if echo "$line" | grep -E "(text|label|description): *(\"|').*(\"|')" >/dev/null; then 
+                  print_line "$h_priority" "$line_index" 'Use translations instead of hardcoded text. Instead of: `"Example Label"`. To: `pluginApi?.tr("panel.example-label")`' "$line"
+                  issues=$((issues + 1))
+                fi
               fi
 
               # Check for required properties
