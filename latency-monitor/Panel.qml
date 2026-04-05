@@ -84,6 +84,7 @@ Item {
                 Layout.fillWidth: true
                 spacing: Style.marginM
 
+                NIcon { icon: "cloud"; pointSize: Style.fontSizeXL; color: Color.mPrimary; Layout.alignment: Qt.AlignVCenter }
                 NText { text: pluginApi?.tr("panel.title"); pointSize: Style.fontSizeL; font.weight: Font.Bold; color: Color.mOnSurface; Layout.alignment: Qt.AlignVCenter }
                 Item  { Layout.fillWidth: true }
 

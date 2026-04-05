@@ -177,12 +177,29 @@ Item {
                 if (mouse.button === Qt.LeftButton) {
                     if (pluginApi) pluginApi.openPanel(root.screen, root)
                 } else if (mouse.button === Qt.RightButton) {
-                    BarService.openPluginSettings(root.screen, pluginApi.manifest)
+                    PanelService.showContextMenu(contextMenu, root, screen)
                 }
             }
 
             onEntered: TooltipService.show(root, tooltipText, BarService.getTooltipDirection(root.screen?.name))
             onExited:  TooltipService.hide()
+        }
+    }
+
+    NPopupContextMenu {
+        id: contextMenu
+        model: [
+            { "label": pluginApi?.tr("menu.openPanel"), "action": "open",     "icon": "cloud" },
+            { "label": pluginApi?.tr("menu.settings"),  "action": "settings", "icon": "settings" }
+        ]
+        onTriggered: function(action) {
+            contextMenu.close()
+            PanelService.closeContextMenu(screen)
+            if (action === "open") {
+                pluginApi.openPanel(root.screen, root)
+            } else if (action === "settings") {
+                BarService.openPluginSettings(root.screen, pluginApi.manifest)
+            }
         }
     }
 }
