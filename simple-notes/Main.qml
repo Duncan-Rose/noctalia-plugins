@@ -5,6 +5,17 @@ import qs.Services.UI
 Item {
   property var pluginApi: null
 
+  IpcHandler {
+      target: "plugin:simple-notes"
+
+      function toggle() {
+          if (!pluginApi) return;
+          pluginApi.withCurrentScreen(screen => {
+              pluginApi.togglePanel(screen);
+          });
+      }
+  }
+
   Component.onCompleted: {
     if (pluginApi) {
       // Initialize settings if they don't exist
